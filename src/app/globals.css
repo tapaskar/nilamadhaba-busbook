@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #dc2626;
+  --color-primary-dark: #b91c1c;
+  --color-primary-light: #fef2f2;
+  --color-secondary: #1e40af;
+  --color-secondary-dark: #1e3a8a;
+  --color-accent: #f59e0b;
+  --color-seat-available: #22c55e;
+  --color-seat-selected: #10b981;
+  --color-seat-booked: #ef4444;
+  --color-seat-locked: #f59e0b;
+  --color-seat-ladies: #ec4899;
+}
