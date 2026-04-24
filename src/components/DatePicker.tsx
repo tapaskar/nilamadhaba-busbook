@@ -103,7 +103,7 @@ export default function DatePicker({ value, onChange }: DatePickerProps) {
               {day.label && (
                 <span
                   className={`text-[10px] font-bold uppercase tracking-wider mb-0.5 ${
-                    isSelected ? "text-red-100" : "text-primary"
+                    isSelected ? "text-[#f5c842]" : "text-primary"
                   }`}
                 >
                   {day.label}
@@ -111,7 +111,7 @@ export default function DatePicker({ value, onChange }: DatePickerProps) {
               )}
               <span
                 className={`text-[10px] font-medium ${
-                  isSelected ? "text-red-100" : "text-gray-400"
+                  isSelected ? "text-white/70" : "text-gray-400"
                 }`}
               >
                 {day.dayName}
@@ -121,7 +121,7 @@ export default function DatePicker({ value, onChange }: DatePickerProps) {
               </span>
               <span
                 className={`text-[10px] font-medium ${
-                  isSelected ? "text-red-100" : "text-gray-400"
+                  isSelected ? "text-white/70" : "text-gray-400"
                 }`}
               >
                 {day.month}

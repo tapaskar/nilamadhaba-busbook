@@ -26,9 +26,11 @@ export default function Header() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <Bus className="h-7 w-7 text-primary" />
-            <span className="text-xl font-extrabold tracking-tight text-primary">
+          <Link href="/" className="flex items-center gap-2 shrink-0 group">
+            <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-[#1a3a8f] to-[#1a1a2e] shadow-sm group-hover:shadow-md transition-shadow">
+              <Bus className="h-5 w-5 text-[#f5c842]" />
+            </div>
+            <span className="text-xl font-extrabold tracking-tight text-[#1a3a8f]">
               NilaMadhaba
             </span>
           </Link>

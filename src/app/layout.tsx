@@ -4,6 +4,8 @@ import "./globals.css";
 import { BookingProvider } from "@/lib/store";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import WhatsAppChat from "@/components/WhatsAppChat";
+import SupportBot from "@/components/SupportBot";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -29,6 +31,8 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <SupportBot />
+          <WhatsAppChat />
         </BookingProvider>
       </body>
     </html>

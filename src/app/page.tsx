@@ -134,26 +134,35 @@ export default function HomePage() {
   return (
     <div>
       {/* ── Hero Section ── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-red-700 via-red-800 to-gray-900 text-white">
-        {/* Background pattern */}
-        <div className="absolute inset-0 opacity-10">
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#1a3a8f] via-[#1e3d95] to-[#1a1a2e] text-white">
+        {/* Subtle pattern layer */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div
             className="absolute inset-0"
             style={{
               backgroundImage:
-                "radial-gradient(circle at 25% 50%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 75% 20%, rgba(255,255,255,0.1) 0%, transparent 40%)",
+                "radial-gradient(circle at 20% 40%, rgba(245,200,66,0.18) 0%, transparent 45%), radial-gradient(circle at 80% 10%, rgba(42,82,190,0.35) 0%, transparent 50%)",
             }}
           />
         </div>
 
+        {/* Gold glow orb */}
+        <div className="absolute -top-20 -right-20 h-72 w-72 rounded-full bg-[#f5c842]/15 blur-3xl pointer-events-none" />
+
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-32 sm:pt-20 sm:pb-40">
           <div className="text-center max-w-3xl mx-auto">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1.5 text-xs font-semibold text-white/90 mb-6">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#f5c842] animate-pulse" />
+              Trusted by 2M+ travellers across India
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
               Travel in Comfort,
               <br />
-              <span className="text-red-200">Arrive in Style</span>
+              <span className="bg-gradient-to-r from-[#f5c842] to-[#fde68a] bg-clip-text text-transparent">
+                Arrive in Style
+              </span>
             </h1>
-            <p className="mt-5 text-lg sm:text-xl text-red-100/80 max-w-2xl mx-auto">
+            <p className="mt-5 text-lg sm:text-xl text-white/75 max-w-2xl mx-auto">
               Premium intercity bus travel across India. Volvo &amp; Scania
               coaches with AC, live tracking, and guaranteed on-time arrivals.
             </p>
@@ -292,10 +301,10 @@ export default function HomePage() {
             return (
               <div
                 key={feature.title}
-                className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-md transition-shadow duration-300"
+                className="group relative rounded-2xl border border-gray-100 bg-white p-6 shadow-sm hover:shadow-lg hover:-translate-y-0.5 hover:border-[#1a3a8f]/20 transition-all duration-300"
               >
-                <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-primary-light mb-4">
-                  <Icon className="h-6 w-6 text-primary" />
+                <div className="relative flex items-center justify-center h-12 w-12 rounded-xl bg-[#e8edf8] mb-4 group-hover:bg-[#1a3a8f] transition-colors">
+                  <Icon className="h-6 w-6 text-[#1a3a8f] group-hover:text-[#f5c842] transition-colors" />
                 </div>
                 <h3 className="text-base font-bold text-gray-900 mb-1.5">
                   {feature.title}

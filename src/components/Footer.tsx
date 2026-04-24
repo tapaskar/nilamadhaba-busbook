@@ -17,13 +17,15 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-400">
+    <footer className="bg-[#1a1a2e] text-gray-400">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
           {/* Brand */}
           <div>
             <Link href="/" className="flex items-center gap-2 mb-3">
-              <Bus className="h-6 w-6 text-primary" />
+              <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-gradient-to-br from-[#1a3a8f] to-[#2a52be]">
+                <Bus className="h-4 w-4 text-[#f5c842]" />
+              </div>
               <span className="text-lg font-extrabold text-white tracking-tight">
                 NilaMadhaba
               </span>
@@ -66,7 +68,7 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-gray-800 text-gray-400 hover:bg-primary hover:text-white transition-colors"
+                  className="inline-flex items-center justify-center h-9 w-9 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:bg-[#f5c842] hover:text-[#1a1a2e] hover:border-[#f5c842] transition-colors"
                 >
                   <Icon className="h-4 w-4" />
                 </a>
