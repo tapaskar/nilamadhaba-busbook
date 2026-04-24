@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeftRight,
@@ -96,7 +97,32 @@ export default function HomePage() {
   return (
     <div className="overflow-x-hidden">
       {/* ═════════════════════════ HERO ═════════════════════════ */}
-      <section className="relative bg-mesh-navy text-white overflow-hidden">
+      <section className="relative bg-[#1a1a2e] text-white overflow-hidden">
+        {/* Background bus photograph */}
+        <div className="absolute inset-0 pointer-events-none">
+          <Image
+            src="https://images.unsplash.com/photo-1756020897176-8c381b24d276?auto=format&fit=crop&w=1920&q=75"
+            alt="NilaMadhaba luxury coach on a city street at night"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-center opacity-45"
+          />
+          {/* Dark gradient overlay for legibility */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#1a1a2e]/85 via-[#1a1a2e]/70 to-[#1a1a2e]" />
+          {/* Royal blue right-side tint to match brand */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1a1a2e]/60 via-transparent to-[#1a3a8f]/40" />
+        </div>
+
+        {/* Mesh gradient accent layer (on top of photo) */}
+        <div
+          className="absolute inset-0 pointer-events-none mix-blend-screen opacity-60"
+          style={{
+            backgroundImage:
+              "radial-gradient(at 22% 15%, rgba(245, 200, 66, 0.18) 0px, transparent 50%), radial-gradient(at 78% 20%, rgba(42, 82, 190, 0.35) 0px, transparent 50%), radial-gradient(at 12% 82%, rgba(26, 58, 143, 0.5) 0px, transparent 50%)",
+          }}
+        />
+
         {/* Animated gold orb */}
         <div className="absolute -top-32 -right-32 h-[32rem] w-[32rem] rounded-full bg-[#f5c842]/10 blur-3xl animate-float-orb pointer-events-none" />
         {/* Animated blue orb */}
@@ -104,7 +130,7 @@ export default function HomePage() {
 
         {/* Grid pattern overlay */}
         <div
-          className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          className="absolute inset-0 opacity-[0.05] pointer-events-none"
           style={{
             backgroundImage:
               "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",

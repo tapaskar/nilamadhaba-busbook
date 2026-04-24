@@ -1,43 +1,78 @@
 "use client";
 
-import { ArrowRight, Clock } from "lucide-react";
+import Image from "next/image";
+import { ArrowRight, Clock, Calendar } from "lucide-react";
 
 /**
- * Rich destination card — gradient background themed per city, decorative
- * SVG landmark silhouette, hover lift + gradient intensify.
+ * Rich destination postcard — full-bleed city photograph, dark bottom
+ * gradient for text legibility, gold-accent price chip, hover zoom.
  *
- * No external images — every visual is a gradient or inline SVG,
- * keeping the card fast and dependable.
+ * Photos are licensed-free from Unsplash; credits tracked in the theme
+ * config so we can render an attribution footer later if needed.
  */
 
-type Theme = {
-  // Background gradient
-  from: string;
-  via?: string;
-  to: string;
-  // Accent colour (tag, price)
+type CityTheme = {
+  /** Remote Unsplash URL (Next.js Image optimises + serves a responsive srcset) */
+  image: string;
+  /** Alt text describing what's in the photo */
+  alt: string;
+  /** Photographer — Unsplash license doesn't require credit but we track it */
+  credit: string;
+  /** Primary accent for gold-on-photo contrast */
   accent: string;
-  // Decorative element: either an emoji string OR an SVG path
-  icon: string;
-  // Text colour override
-  textLight?: boolean;
 };
 
-const themes: Record<string, Theme> = {
-  Chennai:    { from: "#0891b2", via: "#06b6d4", to: "#164e63", accent: "#f5c842", icon: "🌊", textLight: true },
-  Hyderabad:  { from: "#7c3aed", via: "#5b21b6", to: "#1e1b4b", accent: "#f5c842", icon: "🕌", textLight: true },
-  Mumbai:     { from: "#dc2626", via: "#991b1b", to: "#450a0a", accent: "#f5c842", icon: "🌆", textLight: true },
-  Goa:        { from: "#f59e0b", via: "#ea580c", to: "#7c2d12", accent: "#fde68a", icon: "🌴", textLight: true },
-  Mysore:     { from: "#16a34a", via: "#15803d", to: "#052e16", accent: "#f5c842", icon: "🏰", textLight: true },
-  Coimbatore: { from: "#0284c7", via: "#0369a1", to: "#0c4a6e", accent: "#f5c842", icon: "⛰️", textLight: true },
-  Kochi:      { from: "#0d9488", via: "#0f766e", to: "#134e4a", accent: "#f5c842", icon: "⛵", textLight: true },
-  Mangalore:  { from: "#1e40af", via: "#1e3a8a", to: "#172554", accent: "#f5c842", icon: "🌅", textLight: true },
-  Vizag:      { from: "#0e7490", via: "#155e75", to: "#164e63", accent: "#f5c842", icon: "🏖️", textLight: true },
-  Tirupati:   { from: "#b91c1c", via: "#7f1d1d", to: "#1a1a2e", accent: "#f5c842", icon: "🛕", textLight: true },
+const cityThemes: Record<string, CityTheme> = {
+  Chennai: {
+    image:
+      "https://images.unsplash.com/photo-1724992609079-75164f1ba2dd?auto=format&fit=crop&w=800&q=75",
+    alt: "Aerial view of Marina Beach, Chennai at sunset",
+    credit: "Karthick Gislen",
+    accent: "#f5c842",
+  },
+  Hyderabad: {
+    image:
+      "https://images.unsplash.com/photo-1741545979534-02f59c742730?auto=format&fit=crop&w=800&q=75",
+    alt: "The iconic Charminar monument, Hyderabad",
+    credit: "Sunny",
+    accent: "#f5c842",
+  },
+  Mumbai: {
+    image:
+      "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=75",
+    alt: "Gateway of India at dusk, Mumbai",
+    credit: "Sarang Pande",
+    accent: "#f5c842",
+  },
+  Goa: {
+    image:
+      "https://images.unsplash.com/photo-1695453463057-aa5d48d9e3d4?auto=format&fit=crop&w=800&q=75",
+    alt: "Tropical beach with swaying palm trees in Goa",
+    credit: "Chirayu Sharma",
+    accent: "#fde68a",
+  },
+  Mysore: {
+    image:
+      "https://images.unsplash.com/photo-1657856855186-7cf4909a4f78?auto=format&fit=crop&w=800&q=75",
+    alt: "Red-domed Mysore Palace at dusk",
+    credit: "Ninan John",
+    accent: "#f5c842",
+  },
+  Bengaluru: {
+    image:
+      "https://images.unsplash.com/photo-1596176530529-78163a4f7af2?auto=format&fit=crop&w=800&q=75",
+    alt: "Bengaluru cityscape at night",
+    credit: "Satyaprakash Kumawat",
+    accent: "#f5c842",
+  },
 };
 
-const defaultTheme: Theme = {
-  from: "#1a3a8f", via: "#2a52be", to: "#1a1a2e", accent: "#f5c842", icon: "🚌", textLight: true,
+// Fallback for cities without photography — gradient-only tile
+const fallback: CityTheme = {
+  image: "",
+  alt: "Intercity route",
+  credit: "",
+  accent: "#f5c842",
 };
 
 export default function DestinationCard({
@@ -55,73 +90,85 @@ export default function DestinationCard({
   price: string;
   onClick: () => void;
 }) {
-  const theme = themes[toCityName] ?? defaultTheme;
+  const theme = cityThemes[toCityName] ?? fallback;
 
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative overflow-hidden rounded-3xl text-left shadow-lg shadow-gray-900/5 transition-all duration-500 hover:shadow-2xl hover:shadow-gray-900/20 hover:-translate-y-1"
+      className="group relative overflow-hidden rounded-3xl text-left shadow-lg shadow-gray-900/10 transition-all duration-500 hover:shadow-2xl hover:shadow-gray-900/25 hover:-translate-y-1 bg-[#1a1a2e]"
       aria-label={`Book bus from ${fromCityName} to ${toCityName}`}
     >
-      {/* Gradient background */}
-      <div
-        className="absolute inset-0 animate-gradient"
-        style={{
-          background: `linear-gradient(135deg, ${theme.from} 0%, ${theme.via} 50%, ${theme.to} 100%)`,
-        }}
-      />
+      {/* Photo layer with slow zoom on hover */}
+      <div className="relative aspect-[4/3] overflow-hidden">
+        {theme.image ? (
+          <Image
+            src={theme.image}
+            alt={theme.alt}
+            fill
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+            className="object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+            priority={false}
+          />
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-[#1a3a8f] via-[#2a52be] to-[#1a1a2e]" />
+        )}
 
-      {/* Decorative orb (top-right) */}
-      <div
-        className="absolute -top-12 -right-12 h-48 w-48 rounded-full blur-3xl opacity-30 group-hover:opacity-60 transition-opacity duration-500"
-        style={{ backgroundColor: theme.accent }}
-      />
+        {/* Dark top gradient — readable "Route" tag */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-transparent" />
 
-      {/* Grain texture overlay */}
-      <div
-        className="absolute inset-0 opacity-30 mix-blend-overlay pointer-events-none"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 30% 20%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(0,0,0,0.15) 0%, transparent 50%)",
-        }}
-      />
+        {/* Bottom-weighted dark gradient — readable route + price */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
 
-      {/* Icon/emoji landmark */}
-      <div className="absolute bottom-4 right-4 text-6xl opacity-40 group-hover:opacity-60 group-hover:scale-110 transition-all duration-500 pointer-events-none select-none">
-        {theme.icon}
+        {/* Top-right gold glow — intensifies on hover */}
+        <div
+          className="absolute -top-8 -right-8 h-32 w-32 rounded-full blur-2xl opacity-0 group-hover:opacity-70 transition-opacity duration-700"
+          style={{ backgroundColor: theme.accent }}
+        />
       </div>
 
-      {/* Content */}
-      <div className="relative p-6 pb-8 min-h-[180px] flex flex-col justify-between">
-        {/* Route header */}
-        <div>
-          <div className="flex items-center gap-2 text-white/70 text-xs font-semibold uppercase tracking-wider mb-3">
-            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#f5c842] animate-pulse" />
-            Route
-          </div>
-          <div className="flex items-center gap-2 text-white">
-            <span className="text-lg font-bold">{fromCityName}</span>
-            <ArrowRight className="h-4 w-4 opacity-60 group-hover:translate-x-1 transition-transform" />
-            <span className="text-lg font-bold tracking-tight">{toCityName}</span>
-          </div>
-        </div>
+      {/* Top tag — Route label */}
+      <div className="absolute top-4 left-4 flex items-center gap-1.5">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/90 backdrop-blur-sm text-[#1a1a2e] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider shadow-sm">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#f5c842] animate-pulse" />
+          Route
+        </span>
+      </div>
 
-        {/* Details + price */}
-        <div className="mt-5 flex items-end justify-between">
-          <div className="flex flex-col gap-1 text-white/75 text-xs">
-            <span className="flex items-center gap-1.5">
+      {/* Top-right badge — daily frequency */}
+      <div className="absolute top-4 right-4">
+        <span className="inline-flex items-center gap-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/20 text-white px-2.5 py-1 text-[10px] font-bold">
+          <Calendar className="h-2.5 w-2.5" />
+          {frequency}
+        </span>
+      </div>
+
+      {/* Bottom content — overlaid on photo */}
+      <div className="absolute bottom-0 left-0 right-0 p-5">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-white mb-1.5">
+              <span className="text-base font-semibold opacity-90 truncate">
+                {fromCityName}
+              </span>
+              <ArrowRight className="h-4 w-4 opacity-70 group-hover:translate-x-1 transition-transform shrink-0" />
+              <span className="text-xl font-extrabold tracking-tight drop-shadow-sm truncate">
+                {toCityName}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 text-white/80 text-xs">
               <Clock className="h-3 w-3" />
               {duration}
-            </span>
-            <span>{frequency}</span>
+            </div>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+
+          {/* Price chip */}
+          <div className="shrink-0 flex flex-col items-end">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
               From
             </span>
             <span
-              className="text-2xl font-extrabold leading-none"
+              className="text-2xl font-extrabold leading-none drop-shadow-md"
               style={{ color: theme.accent }}
             >
               {price}
@@ -130,7 +177,7 @@ export default function DestinationCard({
         </div>
       </div>
 
-      {/* Hover reveal bar */}
+      {/* Hover underline — gold progress bar */}
       <div
         className="absolute bottom-0 left-0 right-0 h-1 transition-transform duration-500 origin-left scale-x-0 group-hover:scale-x-100"
         style={{ backgroundColor: theme.accent }}
