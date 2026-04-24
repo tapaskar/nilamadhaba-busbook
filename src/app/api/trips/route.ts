@@ -55,8 +55,17 @@ export async function GET(req: Request) {
       else if (fillRatio > 0.3) mult = 1.05;
       if ([0, 5, 6].includes(dayOfWeek)) mult *= 1.1;
 
+      const avgRating = Math.round((3.5 + rng() * 1.5) * 10) / 10;
+      const reviewCount = Math.floor(50 + rng() * 450);
+
       return {
-        schedule: sch,
+        // Embed aggregates on the schedule so <TripCard trip={schedule}/> works
+        schedule: {
+          ...sch,
+          avg_rating: avgRating,
+          review_count: reviewCount,
+          booked_seat_count: bookedSeats.length,
+        },
         travel_date: date,
         available_seats: availableSeats,
         booked_seats: bookedSeats,
@@ -64,8 +73,8 @@ export async function GET(req: Request) {
         effective_sleeper_price: sch.sleeper_price
           ? Math.round(sch.sleeper_price * mult)
           : null,
-        avg_rating: Math.round((3.5 + rng() * 1.5) * 10) / 10,
-        review_count: Math.floor(50 + rng() * 450),
+        avg_rating: avgRating,
+        review_count: reviewCount,
         boarding_points: mock.getBoardingPointsForCity(from),
         dropping_points: mock.getDroppingPointsForCity(to),
       };
