@@ -2,6 +2,7 @@
 
 import { Star, Quote } from "lucide-react";
 import ScrollReveal from "./ScrollReveal";
+import { useT } from "@/lib/i18n";
 
 const testimonials = [
   {
@@ -40,18 +41,19 @@ const testimonials = [
 ];
 
 export default function Testimonials() {
+  const t = useT();
   return (
     <section className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-24 sm:mt-32">
       <ScrollReveal className="text-center mb-12">
         <div className="inline-flex items-center gap-2 rounded-full bg-[#e8edf8] text-[#1a3a8f] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
           <Star className="h-3 w-3 fill-[#f5c842] stroke-[#f5c842]" />
-          4.8 / 5 on 50,000+ trips
+          {t("testimonials.badge")}
         </div>
         <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-          Travellers love the journey
+          {t("testimonials.heading")}
         </h2>
         <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-          Real stories from people who swapped last-minute chaos for a smoother ride.
+          {t("testimonials.subtitle")}
         </p>
       </ScrollReveal>
 

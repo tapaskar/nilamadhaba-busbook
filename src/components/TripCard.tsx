@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { ScheduleWithDetails } from "@/lib/types";
 import SeatMap from "./SeatMap";
+import { useT } from "@/lib/i18n";
 
 interface TripCardProps {
   trip: ScheduleWithDetails;
@@ -75,6 +76,7 @@ export default function TripCard({
   selectedSeats,
   bookedSeats,
 }: TripCardProps) {
+  const t = useT();
   const duration = trip.route.estimated_duration_minutes;
   const availableSeats = useMemo(
     () => trip.bus.total_seats - (trip.booked_seat_count ?? 0),
@@ -182,7 +184,7 @@ export default function TripCard({
             {availableSeats <= 5 ? (
               <span className="inline-flex items-center gap-1 rounded-md bg-red-50 text-red-600 px-2 py-0.5 text-xs font-bold animate-pulse">
                 <Flame className="h-3 w-3" />
-                Only {availableSeats} left!
+                {t("trip.onlyLeft")} {availableSeats} {t("trip.left")}
               </span>
             ) : (
               <span
@@ -190,7 +192,7 @@ export default function TripCard({
                   availableSeats <= 15 ? "text-amber-600" : "text-green-600"
                 }`}
               >
-                {availableSeats} seat{availableSeats !== 1 ? "s" : ""} left
+                {availableSeats} {availableSeats !== 1 ? t("trip.seatsLeft") : t("trip.seatLeft")}
               </span>
             )}
           </div>
@@ -201,7 +203,7 @@ export default function TripCard({
           <div className="flex flex-wrap items-center gap-3">
             <span className="inline-flex items-center gap-1 text-xs text-green-600">
               <CheckCircle2 className="h-3.5 w-3.5" />
-              On-time
+              {t("trip.onTime")}
             </span>
             {trip.route.distance_km && (
               <span className="text-xs text-gray-400">
@@ -216,7 +218,7 @@ export default function TripCard({
                 let h = 0;
                 for (let i = 0; i < trip.id.length; i++) h = ((h << 5) - h + trip.id.charCodeAt(i)) | 0;
                 const n = Math.abs(h) % 40 + 8; // 8-47
-                return `${n} booked today`;
+                return `${n} ${t("trip.bookedToday")}`;
               })()}
             </span>
           </div>
@@ -226,7 +228,7 @@ export default function TripCard({
             onClick={onToggle}
             className="inline-flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-primary hover:bg-primary-light transition-colors"
           >
-            {isExpanded ? "Hide" : "Select Seats"}
+            {isExpanded ? t("trip.hide") : t("trip.selectSeats")}
             <ChevronDown
               className={`h-4 w-4 transition-transform duration-300 ${
                 isExpanded ? "rotate-180" : ""
@@ -248,7 +250,7 @@ export default function TripCard({
             <div className="rounded-xl bg-white border border-gray-100 p-4">
               <h4 className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 <MapPin className="h-3.5 w-3.5 text-green-600" />
-                Boarding Point
+                {t("trip.boardingPoint")}
               </h4>
               <p className="text-sm font-semibold text-gray-900">
                 {trip.route.origin_city.name} Bus Stand · Platform 4
@@ -270,14 +272,14 @@ export default function TripCard({
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1 font-medium text-gray-600 hover:text-[#1a3a8f] hover:underline"
                 >
-                  Get directions ↗
+                  {t("trip.getDirections")} ↗
                 </a>
               </div>
             </div>
             <div className="rounded-xl bg-white border border-gray-100 p-4">
               <h4 className="flex items-center gap-1.5 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
                 <MapPin className="h-3.5 w-3.5 text-[#1a3a8f]" />
-                Dropping Point
+                {t("trip.droppingPoint")}
               </h4>
               <p className="text-sm font-semibold text-gray-900">
                 {trip.route.destination_city.name} Bus Stand · CMBT Gate 3
@@ -299,7 +301,7 @@ export default function TripCard({
                   onClick={(e) => e.stopPropagation()}
                   className="inline-flex items-center gap-1 font-medium text-gray-600 hover:text-[#1a3a8f] hover:underline"
                 >
-                  Get directions ↗
+                  {t("trip.getDirections")} ↗
                 </a>
               </div>
             </div>
@@ -308,7 +310,7 @@ export default function TripCard({
           {/* Seat map */}
           <div>
             <h4 className="text-sm font-semibold text-gray-700 mb-3">
-              Select Seats
+              {t("trip.selectSeats")}
             </h4>
             <SeatMap
               layout={trip.bus.seat_layout}
@@ -338,20 +340,20 @@ export default function TripCard({
                 <div className="px-4 py-3 space-y-1.5 text-sm">
                   <div className="flex items-center justify-between text-gray-600">
                     <span>
-                      Base fare × {selectedSeats.length}
+                      {t("trip.baseFare")} × {selectedSeats.length}
                     </span>
                     <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between text-gray-600">
-                    <span>GST (5%)</span>
+                    <span>{t("trip.gst")}</span>
                     <span>{formatPrice(gst)}</span>
                   </div>
                   <div className="flex items-center justify-between text-emerald-600">
-                    <span>Convenience fee</span>
-                    <span className="font-semibold">FREE</span>
+                    <span>{t("trip.convenience")}</span>
+                    <span className="font-semibold">{t("trip.free")}</span>
                   </div>
                   <div className="pt-2 mt-2 border-t border-gray-100 flex items-center justify-between">
-                    <span className="font-bold text-gray-900">Total</span>
+                    <span className="font-bold text-gray-900">{t("trip.total")}</span>
                     <span className="text-xl font-extrabold text-[#1a3a8f]">
                       {formatPrice(total)}
                     </span>

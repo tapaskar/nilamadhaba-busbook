@@ -44,27 +44,28 @@ const popularRoutes = [
   { from: "city-chn", to: "city-hyd", fromName: "Chennai",   toName: "Hyderabad", price: 84900,  duration: 540, frequency: "15+ daily" },
 ];
 
-const features = [
-  { icon: Clock,       title: "On-Time Guarantee",  description: "95% on-time across all routes. Cash back if we're more than 45 minutes late." },
-  { icon: ShieldCheck, title: "Free Cancellation",  description: "100% refund up to 12 hours before departure. Instant credit to your wallet." },
-  { icon: MapPinned,   title: "Live GPS Tracking",  description: "Watch your bus move in real time. Share the live link with family." },
-  { icon: Sparkles,    title: "Premium Comfort",    description: "Volvo & Scania coaches — AC, blankets, charging ports, reading lights." },
-];
+// Features, amenities, and steps use translation keys — resolved per-render below
+const featureKeys = [
+  { icon: Clock,       titleKey: "why.onTime",   descKey: "why.onTimeDesc"   },
+  { icon: ShieldCheck, titleKey: "why.cancel",   descKey: "why.cancelDesc"   },
+  { icon: MapPinned,   titleKey: "why.tracking", descKey: "why.trackingDesc" },
+  { icon: Sparkles,    titleKey: "why.comfort",  descKey: "why.comfortDesc"  },
+] as const;
 
-const amenities = [
-  { icon: Wind,   label: "AC Sleeper" },
-  { icon: Wifi,   label: "Wi-Fi" },
-  { icon: Zap,    label: "Charging Port" },
-  { icon: Coffee, label: "Snacks" },
-  { icon: Bell,   label: "Wake-up Call" },
-  { icon: Bus,    label: "Live Track" },
-];
+const amenityKeys = [
+  { icon: Wind,   key: "inside.amenityAC" },
+  { icon: Wifi,   key: "inside.amenityWifi" },
+  { icon: Zap,    key: "inside.amenityCharge" },
+  { icon: Coffee, key: "inside.amenitySnack" },
+  { icon: Bell,   key: "inside.amenityWake" },
+  { icon: Bus,    key: "inside.amenityTrack" },
+] as const;
 
-const steps = [
-  { num: "01", title: "Pick your route",    desc: "From Bengaluru to Chennai at 9 PM? Tap a postcard below." },
-  { num: "02", title: "Choose your seat",   desc: "See the bus layout in one tap — window, aisle, ladies-only." },
-  { num: "03", title: "Pay & board",        desc: "UPI in 2 taps. E-ticket arrives on WhatsApp instantly." },
-];
+const stepKeys = [
+  { num: "01", titleKey: "howworks.step1Title", descKey: "howworks.step1Desc" },
+  { num: "02", titleKey: "howworks.step2Title", descKey: "howworks.step2Desc" },
+  { num: "03", titleKey: "howworks.step3Title", descKey: "howworks.step3Desc" },
+] as const;
 
 function getTodayStr() {
   const d = new Date();
@@ -262,12 +263,12 @@ export default function HomePage() {
           <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-gray-400">
             <span className="flex items-center gap-1">
               <ShieldCheck className="h-3 w-3 text-emerald-500" />
-              256-bit SSL
+              {t("search.trustSsl")}
             </span>
             <span>•</span>
-            <span>Zero booking fees</span>
+            <span>{t("search.trustFee")}</span>
             <span>•</span>
-            <span className="text-[#1a3a8f] font-semibold">Instant refunds</span>
+            <span className="text-[#1a3a8f] font-semibold">{t("search.trustRefund")}</span>
           </div>
         </div>
       </div>
@@ -276,10 +277,10 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-24 sm:mt-28">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           {[
-            { label: "Happy travellers",   value: 2400000, suffix: "+", format: "short" as const, icon: "👥", accent: "#1a3a8f" },
-            { label: "Daily trips",        value: 500,     suffix: "+", format: "plain" as const, icon: "🚌", accent: "#2a52be" },
-            { label: "Cities connected",   value: 48,      suffix: "",  format: "plain" as const, icon: "📍", accent: "#f5c842" },
-            { label: "On-time performance", value: 95,     suffix: "%", format: "plain" as const, icon: "⏱️", accent: "#1a3a8f" },
+            { label: t("stats.travellers"),  value: 2400000, suffix: "+", format: "short" as const, icon: "👥", accent: "#1a3a8f" },
+            { label: t("stats.dailyTrips"),  value: 500,     suffix: "+", format: "plain" as const, icon: "🚌", accent: "#2a52be" },
+            { label: t("stats.cities"),      value: 48,      suffix: "",  format: "plain" as const, icon: "📍", accent: "#f5c842" },
+            { label: t("stats.onTime"),      value: 95,      suffix: "%", format: "plain" as const, icon: "⏱️", accent: "#1a3a8f" },
           ].map((s, i) => (
             <ScrollReveal
               key={s.label}
@@ -316,13 +317,13 @@ export default function HomePage() {
         <ScrollReveal className="text-center mb-12">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#e8edf8] text-[#1a3a8f] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
             <SlidersHorizontal className="h-3 w-3" />
-            How it works
+            {t("howworks.badge")}
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Three taps from here to there
+            {t("howworks.heading")}
           </h2>
           <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-            No account required. No hidden fees. No surprise stopovers.
+            {t("howworks.subtitle")}
           </p>
         </ScrollReveal>
 
@@ -330,7 +331,7 @@ export default function HomePage() {
           {/* Connecting line (desktop) */}
           <div className="hidden md:block absolute top-[68px] left-[16%] right-[16%] h-px bg-gradient-to-r from-transparent via-[#1a3a8f]/20 to-transparent" />
 
-          {steps.map((step, idx) => (
+          {stepKeys.map((step, idx) => (
             <ScrollReveal
               key={step.num}
               delay={(idx + 1) as 1 | 2 | 3}
@@ -343,16 +344,15 @@ export default function HomePage() {
                       {step.num}
                     </span>
                   </div>
-                  {/* Gold glow ring on last step */}
                   {idx === 2 && (
                     <span className="absolute inset-0 rounded-2xl ring-4 ring-[#f5c842]/30 animate-pulse-glow" />
                   )}
                 </div>
                 <h3 className="text-lg font-bold text-gray-900 mb-1.5">
-                  {step.title}
+                  {t(step.titleKey)}
                 </h3>
                 <p className="text-sm text-gray-500 max-w-xs leading-relaxed">
-                  {step.desc}
+                  {t(step.descKey)}
                 </p>
               </div>
             </ScrollReveal>
@@ -366,13 +366,13 @@ export default function HomePage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full bg-[#e8edf8] text-[#1a3a8f] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
               <MapPinned className="h-3 w-3" />
-              Popular routes
+              {t("routes.section")}
             </div>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-              Where are you headed?
+              {t("routes.heading")}
             </h2>
             <p className="mt-2 text-gray-500 max-w-xl">
-              Most loved routes across South &amp; West India — each runs multiple times a day.
+              {t("routes.subtitle")}
             </p>
           </div>
           <button
@@ -380,7 +380,7 @@ export default function HomePage() {
             onClick={() => router.push(`/search?from=city-blr&to=city-chn&date=${date}`)}
             className="hidden sm:inline-flex items-center gap-1.5 text-sm font-semibold text-[#1a3a8f] hover:gap-2.5 transition-all"
           >
-            See all routes
+            {t("routes.seeAll")}
             <ArrowRight className="h-4 w-4" />
           </button>
         </ScrollReveal>
@@ -415,29 +415,28 @@ export default function HomePage() {
             <ScrollReveal>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#f5c842] mb-4">
                 <Sparkles className="h-3 w-3" />
-                Inside every NilaMadhaba bus
+                {t("inside.badge")}
               </div>
               <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-[1.05]">
-                Your seat on the
+                {t("inside.headingPre")}
                 <br />
-                <span className="text-gold-gradient">most comfortable</span>
+                <span className="text-gold-gradient">{t("inside.headingAccent")}</span>
                 <br />
-                ride in India.
+                {t("inside.headingPost")}
               </h2>
               <p className="mt-5 text-lg text-white/75 max-w-lg leading-relaxed">
-                Volvo B11R &amp; Scania Multi-Axle coaches. Every bus gets a
-                48-point safety &amp; hygiene check before each departure.
+                {t("inside.subtitle")}
               </p>
 
               <div className="mt-8 grid grid-cols-2 gap-3 max-w-md">
-                {amenities.map((a, i) => (
+                {amenityKeys.map((a, i) => (
                   <ScrollReveal
-                    key={a.label}
+                    key={a.key}
                     delay={(((i % 6) + 1) as 1 | 2 | 3 | 4 | 5 | 6)}
                     className="flex items-center gap-2.5 rounded-xl glass px-3.5 py-2.5"
                   >
                     <a.icon className="h-4 w-4 text-[#f5c842] shrink-0" />
-                    <span className="text-sm font-medium">{a.label}</span>
+                    <span className="text-sm font-medium">{t(a.key)}</span>
                   </ScrollReveal>
                 ))}
               </div>
@@ -457,7 +456,7 @@ export default function HomePage() {
                   </div>
                   <div className="flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-1 text-xs font-bold text-emerald-300">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    On route
+                    {t("inside.onRoute")}
                   </div>
                 </div>
 
@@ -490,10 +489,10 @@ export default function HomePage() {
                 {/* Legend */}
                 <div className="flex flex-wrap items-center gap-3 pt-5 border-t border-white/10 text-xs">
                   {[
-                    { color: "bg-emerald-500/30 border-emerald-400/40", label: "Available" },
-                    { color: "bg-[#f5c842]", label: "Selected" },
-                    { color: "bg-white/20", label: "Booked" },
-                    { color: "bg-pink-400/20 border-pink-400/40", label: "Ladies" },
+                    { color: "bg-emerald-500/30 border-emerald-400/40", label: t("seat.available") },
+                    { color: "bg-[#f5c842]",                             label: t("seat.selected")  },
+                    { color: "bg-white/20",                              label: t("seat.booked")    },
+                    { color: "bg-pink-400/20 border-pink-400/40",        label: t("seat.ladies")    },
                   ].map((l) => (
                     <span key={l.label} className="flex items-center gap-1.5 text-white/70">
                       <span className={`h-3 w-3 rounded ${l.color} border`} />
@@ -521,26 +520,25 @@ export default function HomePage() {
         <ScrollReveal className="text-center mb-12">
           <div className="inline-flex items-center gap-2 rounded-full bg-[#e8edf8] text-[#1a3a8f] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
             <Star className="h-3 w-3 fill-[#f5c842] stroke-[#f5c842]" />
-            Why travellers choose us
+            {t("why.badge")}
           </div>
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
-            Built for the way India travels
+            {t("why.heading")}
           </h2>
           <p className="mt-3 text-gray-500 max-w-xl mx-auto">
-            The reliability of an airline, the value of a bus ticket.
+            {t("why.subtitle")}
           </p>
         </ScrollReveal>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {features.map((feature, i) => {
+          {featureKeys.map((feature, i) => {
             const Icon = feature.icon;
             return (
               <ScrollReveal
-                key={feature.title}
+                key={feature.titleKey}
                 delay={(i + 1) as 1 | 2 | 3 | 4}
                 className="group relative rounded-3xl border border-gray-100 bg-white p-7 shadow-sm hover:shadow-xl hover:-translate-y-1 hover:border-[#1a3a8f]/20 transition-all duration-500 overflow-hidden"
               >
-                {/* Gold corner accent */}
                 <div className="absolute -top-8 -right-8 h-24 w-24 rounded-full bg-[#f5c842]/10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 <div className="relative">
@@ -548,10 +546,10 @@ export default function HomePage() {
                     <Icon className="h-6 w-6 text-[#1a3a8f] group-hover:text-[#f5c842] transition-colors duration-500" />
                   </div>
                   <h3 className="text-base font-bold text-gray-900 mb-2">
-                    {feature.title}
+                    {t(feature.titleKey)}
                   </h3>
                   <p className="text-sm text-gray-500 leading-relaxed">
-                    {feature.description}
+                    {t(feature.descKey)}
                   </p>
                 </div>
               </ScrollReveal>
@@ -573,15 +571,13 @@ export default function HomePage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-[#1a1a2e] text-[#f5c842] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
                 <Sparkles className="h-3 w-3" />
-                NilaMadhaba RideClub
+                {t("loyalty.badge")}
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a1a2e] tracking-tight leading-[1.05]">
-                Your 6th trip is on us.
+                {t("loyalty.heading")}
               </h2>
               <p className="mt-4 text-base sm:text-lg text-[#1a1a2e]/80 max-w-lg">
-                Earn 5% back as RideCoins on every booking. Redeem them on
-                future trips, seat upgrades, or meals. Members also get
-                priority boarding and 24×7 dedicated support.
+                {t("loyalty.subtitle")}
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a
@@ -589,13 +585,13 @@ export default function HomePage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-[#1a1a2e] hover:bg-[#0b0b1a] text-[#f5c842] px-5 py-3 text-sm font-bold shadow-lg transition-colors"
                 >
                   <Sparkles className="h-4 w-4" />
-                  Join free
+                  {t("loyalty.joinFree")}
                 </a>
                 <a
                   href="/help#loyalty"
                   className="inline-flex items-center gap-2 rounded-xl bg-white/40 hover:bg-white/60 text-[#1a1a2e] px-5 py-3 text-sm font-bold transition-colors backdrop-blur-sm border border-[#1a1a2e]/10"
                 >
-                  How it works →
+                  {t("loyalty.howItWorks")}
                 </a>
               </div>
             </div>
@@ -603,23 +599,23 @@ export default function HomePage() {
             {/* Tier showcase */}
             <div className="grid grid-cols-2 gap-3">
               {[
-                { tier: "Silver",   trips: "5+",  perk: "5% off",  color: "#94a3b8" },
-                { tier: "Gold",     trips: "15+", perk: "8% off + free meal", color: "#fbbf24" },
-                { tier: "Platinum", trips: "30+", perk: "10% + lounge access", color: "#c084fc" },
-                { tier: "Diamond",  trips: "60+", perk: "15% + free reschedule", color: "#22d3ee" },
-              ].map((t) => (
+                { tier: "Silver",   trips: "5+",  perk: "5% off",                 color: "#94a3b8" },
+                { tier: "Gold",     trips: "15+", perk: "8% off + free meal",     color: "#fbbf24" },
+                { tier: "Platinum", trips: "30+", perk: "10% + lounge access",    color: "#c084fc" },
+                { tier: "Diamond",  trips: "60+", perk: "15% + free reschedule",  color: "#22d3ee" },
+              ].map((tier) => (
                 <div
-                  key={t.tier}
+                  key={tier.tier}
                   className="rounded-2xl bg-white/70 backdrop-blur-sm border border-white p-4 shadow-sm"
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span
                       className="inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: t.color }}
+                      style={{ backgroundColor: tier.color }}
                     />
-                    <span className="text-sm font-extrabold text-[#1a1a2e]">{t.tier}</span>
+                    <span className="text-sm font-extrabold text-[#1a1a2e]">{tier.tier}</span>
                   </div>
-                  <p className="text-xs text-[#1a1a2e]/70">{t.trips} trips · {t.perk}</p>
+                  <p className="text-xs text-[#1a1a2e]/70">{tier.trips} {t("loyalty.tripsLabel")} · {tier.perk}</p>
                 </div>
               ))}
             </div>
@@ -638,16 +634,15 @@ export default function HomePage() {
             <div>
               <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-[#f5c842] mb-4">
                 <Download className="h-3 w-3" />
-                Get the app
+                {t("app.badge")}
               </div>
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.05]">
-                Book faster on the
+                {t("app.headingPre")}
                 <br />
-                <span className="text-gold-gradient">NilaMadhaba app.</span>
+                <span className="text-gold-gradient">{t("app.headingAccent")}</span>
               </h2>
               <p className="mt-4 text-lg text-white/75 max-w-lg">
-                One-tap rebook · offline boarding pass · push notifications when
-                your bus is 5 km away.
+                {t("app.subtitle")}
               </p>
 
               <div className="mt-7 flex flex-wrap gap-3">
@@ -658,10 +653,10 @@ export default function HomePage() {
                   <Apple className="h-7 w-7 text-white" />
                   <div className="text-left">
                     <p className="text-[10px] text-white/70 leading-none">
-                      Download on the
+                      {t("app.appStoreTag")}
                     </p>
                     <p className="text-base font-bold text-white leading-tight">
-                      App Store
+                      {t("app.appStore")}
                     </p>
                   </div>
                 </a>
@@ -671,16 +666,16 @@ export default function HomePage() {
                 >
                   <Play className="h-6 w-6 text-white fill-white" />
                   <div className="text-left">
-                    <p className="text-[10px] text-white/70 leading-none">GET IT ON</p>
+                    <p className="text-[10px] text-white/70 leading-none">{t("app.playStoreTag")}</p>
                     <p className="text-base font-bold text-white leading-tight">
-                      Google Play
+                      {t("app.playStore")}
                     </p>
                   </div>
                 </a>
               </div>
 
               <p className="mt-5 text-xs text-white/50">
-                ★ 4.9 on both stores · 500k+ downloads
+                {t("app.ratings")}
               </p>
             </div>
 

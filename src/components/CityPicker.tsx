@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { MapPin, Search, X } from "lucide-react";
 import type { City } from "@/lib/types";
+import { useT } from "@/lib/i18n";
 
 interface CityPickerProps {
   label: string;
@@ -26,6 +27,7 @@ export default function CityPicker({
   cities,
   excludeCityId,
 }: CityPickerProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -78,7 +80,7 @@ export default function CityPicker({
   return (
     <div ref={containerRef} className="relative">
       <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-        {label}
+        {label === "From" ? t("search.from") : label === "To" ? t("search.to") : label}
       </label>
 
       <button
@@ -98,7 +100,7 @@ export default function CityPicker({
             value ? "text-gray-900" : "text-gray-400"
           }`}
         >
-          {value || `Select ${label.toLowerCase()} city`}
+          {value || (label === "From" ? t("city.selectFrom") : t("city.selectTo"))}
         </span>
       </button>
 
@@ -113,7 +115,7 @@ export default function CityPicker({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search city..."
+              placeholder={t("city.searchCity")}
               className="flex-1 text-sm text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
             />
             {query && (
@@ -131,13 +133,13 @@ export default function CityPicker({
           <div className="max-h-60 overflow-y-auto">
             {showPopularLabel && (
               <p className="px-3 pt-2 pb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                Popular Cities
+                {t("city.popularCities")}
               </p>
             )}
 
             {displayList.length === 0 && (
               <p className="px-3 py-6 text-sm text-gray-400 text-center">
-                No cities found
+                {t("city.noCities")}
               </p>
             )}
 

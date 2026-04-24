@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useEffect } from "react";
 import { Calendar } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 interface DatePickerProps {
   value: string; // YYYY-MM-DD
@@ -31,6 +32,7 @@ function getLabel(date: Date, today: Date): string | null {
 }
 
 export default function DatePicker({ value, onChange }: DatePickerProps) {
+  const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const days = useMemo(() => {
@@ -74,7 +76,7 @@ export default function DatePicker({ value, onChange }: DatePickerProps) {
     <div>
       <label className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
         <Calendar className="h-3.5 w-3.5" />
-        Travel Date
+        {t("search.date")}
       </label>
 
       <div
@@ -106,7 +108,7 @@ export default function DatePicker({ value, onChange }: DatePickerProps) {
                     isSelected ? "text-[#f5c842]" : "text-primary"
                   }`}
                 >
-                  {day.label}
+                  {day.label === "Today" ? t("search.today") : day.label === "Tomorrow" ? t("search.tomorrow") : day.label}
                 </span>
               )}
               <span

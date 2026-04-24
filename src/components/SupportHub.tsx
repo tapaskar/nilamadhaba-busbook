@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageSquareText, X, Sparkles, Zap, Clock } from "lucide-react";
 import SupportBot from "./SupportBot";
 import WhatsAppChat from "./WhatsAppChat";
+import { useT } from "@/lib/i18n";
 
 /**
  * Unified support launcher.
@@ -23,6 +24,7 @@ import WhatsAppChat from "./WhatsAppChat";
 type View = "closed" | "menu" | "ai" | "whatsapp";
 
 export default function SupportHub() {
+  const t = useT();
   const [view, setView] = useState<View>("closed");
   const [hasBeenOpened, setHasBeenOpened] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -86,12 +88,12 @@ export default function SupportHub() {
                 <div>
                   <div className="flex items-center gap-1.5 mb-1">
                     <p className="font-extrabold text-lg tracking-tight">
-                      Need a hand?
+                      {t("support.needHand")}
                     </p>
                     <Sparkles className="h-4 w-4 text-[#f5c842]" />
                   </div>
                   <p className="text-sm text-white/75">
-                    We&apos;re here to help — pick how you&apos;d like to chat.
+                    {t("support.pickChat")}
                   </p>
                 </div>
                 <button
@@ -122,14 +124,14 @@ export default function SupportHub() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="font-bold text-sm text-gray-900">Nila Assist</p>
+                    <p className="font-bold text-sm text-gray-900">{t("support.nilaAssist")}</p>
                     <span className="inline-flex items-center rounded-md bg-[#f5c842] text-[#1a1a2e] px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
-                      AI
+                      {t("support.aiBadge")}
                     </span>
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     <Zap className="h-3 w-3 text-[#f5c842]" />
-                    Instant answers, always online
+                    {t("support.instantAI")}
                   </p>
                 </div>
                 <svg className="h-4 w-4 text-gray-300 group-hover:text-[#1a3a8f] group-hover:translate-x-1 transition-all shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -149,10 +151,10 @@ export default function SupportHub() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-bold text-sm text-gray-900">WhatsApp</p>
+                  <p className="font-bold text-sm text-gray-900">{t("support.whatsapp")}</p>
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
                     <Clock className="h-3 w-3 text-[#25D366]" />
-                    Our reps reply in minutes
+                    {t("support.repsReply")}
                   </p>
                 </div>
                 <svg className="h-4 w-4 text-gray-300 group-hover:text-[#25D366] group-hover:translate-x-1 transition-all shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -164,7 +166,7 @@ export default function SupportHub() {
             {/* Footer — toll-free number */}
             <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
               <span className="text-[11px] text-gray-500">
-                Prefer a call?
+                {t("support.preferCall")}
               </span>
               <a
                 href="tel:18001234567"

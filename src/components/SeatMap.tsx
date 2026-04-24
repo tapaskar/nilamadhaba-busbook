@@ -2,6 +2,7 @@
 
 import type { SeatLayout, Seat } from "@/lib/types";
 import { CircleDot } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 interface SeatMapProps {
   layout: SeatLayout;
@@ -24,11 +25,13 @@ const statusStyles: Record<VisualStatus, string> = {
     "bg-seat-ladies/15 border-seat-ladies text-seat-ladies hover:bg-seat-ladies/30 cursor-pointer",
 };
 
-const legend: { status: VisualStatus; label: string }[] = [
-  { status: "available", label: "Available" },
-  { status: "selected", label: "Selected" },
-  { status: "booked", label: "Booked" },
-  { status: "ladies_only", label: "Ladies Only" },
+// Legend — label is a translation key rather than a literal string;
+// resolved via useT() inside the render.
+const legendItems: { status: VisualStatus; key: string }[] = [
+  { status: "available",   key: "seat.available" },
+  { status: "selected",    key: "seat.selected"  },
+  { status: "booked",      key: "seat.booked"    },
+  { status: "ladies_only", key: "seat.ladies"    },
 ];
 
 function getSeatStatus(
@@ -49,6 +52,7 @@ export default function SeatMap({
   onSeatClick,
   maxSelectable = 6,
 }: SeatMapProps) {
+  const t = useT();
   const handleClick = (seat: Seat) => {
     const status = getSeatStatus(seat, bookedSeats, selectedSeats);
     if (status === "booked") return;
@@ -67,16 +71,16 @@ export default function SeatMap({
       {/* Prominent seat legend — pinned at the top so it's seen before scanning seats */}
       <div className="rounded-xl bg-[#e8edf8]/60 border border-[#1a3a8f]/10 px-4 py-3">
         <p className="text-[10px] font-bold text-[#1a3a8f] uppercase tracking-wider mb-2">
-          Seat colour guide
+          {t("seat.colourGuide")}
         </p>
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          {legend.map(({ status, label }) => (
+          {legendItems.map(({ status, key }) => (
             <div key={status} className="flex items-center gap-1.5">
               <span
                 className={`inline-block h-5 w-5 rounded-md border-2 ${statusStyles[status]}`}
                 aria-hidden="true"
               />
-              <span className="text-xs font-medium text-gray-700">{label}</span>
+              <span className="text-xs font-medium text-gray-700">{t(key)}</span>
             </div>
           ))}
         </div>
@@ -105,14 +109,20 @@ export default function SeatMap({
         return (
           <div key={deck.name} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-              {deck.name}
+              {deck.name === "Lower Deck"
+                ? t("seat.lowerDeck")
+                : deck.name === "Upper Deck"
+                  ? t("seat.upperDeck")
+                  : deck.name === "Main Deck"
+                    ? t("seat.mainDeck")
+                    : deck.name}
             </h4>
 
             {/* Steering icon */}
             <div className="flex justify-end mb-2 pr-1">
               <div className="flex items-center gap-1 text-gray-400">
                 <CircleDot className="h-5 w-5" />
-                <span className="text-[10px] font-medium uppercase">Driver</span>
+                <span className="text-[10px] font-medium uppercase">{t("seat.driver")}</span>
               </div>
             </div>
 

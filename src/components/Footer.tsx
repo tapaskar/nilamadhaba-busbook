@@ -10,6 +10,7 @@ import {
   Shield,
   ArrowRight,
 } from "lucide-react";
+import { useT } from "@/lib/i18n";
 
 // Inline brand glyphs — lucide-react v1 doesn't export these,
 // and brand marks are better as their own SVG paths anyway.
@@ -111,6 +112,7 @@ const paymentMethods = [
 ];
 
 export default function Footer() {
+  const t = useT();
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
@@ -134,10 +136,10 @@ export default function Footer() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
             <div>
               <h3 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
-                Be the first to know about deals
+                {t("footer.newsletterHeading")}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Flash sales, new routes, and travel tips — no spam, unsubscribe anytime.
+                {t("footer.newsletterSubtitle")}
               </p>
             </div>
             <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex gap-2">
@@ -145,7 +147,7 @@ export default function Footer() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
+                placeholder={t("footer.emailPlaceholder")}
                 aria-label="Email address"
                 className="flex-1 lg:w-72 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-[#f5c842] focus:ring-2 focus:ring-[#f5c842]/20 outline-none transition-all"
               />
@@ -156,11 +158,11 @@ export default function Footer() {
                 {subscribed ? (
                   <>
                     <Shield className="h-4 w-4" />
-                    Subscribed!
+                    {t("footer.subscribed")}
                   </>
                 ) : (
                   <>
-                    Subscribe
+                    {t("footer.subscribe")}
                     <ArrowRight className="h-4 w-4" />
                   </>
                 )}
@@ -184,8 +186,7 @@ export default function Footer() {
               </span>
             </Link>
             <p className="text-sm text-gray-500 leading-relaxed max-w-sm mb-5">
-              India&apos;s most comfortable intercity bus service. Safe,
-              reliable, and built for the modern traveller.
+              {t("footer.tagline")}
             </p>
 
             {/* Contact */}
@@ -232,7 +233,7 @@ export default function Footer() {
           {/* Quick links */}
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">
-              Company
+              {t("footer.company")}
             </h4>
             <ul className="space-y-2.5">
               {quickLinks.map((l) => (
@@ -251,7 +252,7 @@ export default function Footer() {
           {/* Support */}
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">
-              Support
+              {t("footer.support")}
             </h4>
             <ul className="space-y-2.5">
               {supportLinks.map((l) => (
@@ -270,7 +271,7 @@ export default function Footer() {
           {/* Popular routes */}
           <div>
             <h4 className="text-xs font-bold text-white uppercase tracking-wider mb-4">
-              Popular routes
+              {t("footer.popularRoutes")}
             </h4>
             <ul className="space-y-2.5">
               {destinations.map((l) => (
@@ -292,7 +293,7 @@ export default function Footer() {
           {/* Payment methods */}
           <div>
             <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
-              Secure payments via
+              {t("footer.securePayments")}
             </p>
             <div className="flex flex-wrap gap-2">
               {paymentMethods.map((p) => (
@@ -313,7 +314,7 @@ export default function Footer() {
           {/* Download apps */}
           <div className="md:text-right">
             <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">
-              Book on the go
+              {t("footer.bookOnGo")}
             </p>
             <div className="flex md:justify-end gap-2">
               <a
@@ -341,7 +342,7 @@ export default function Footer() {
       <div className="relative border-t border-white/5">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-gray-600">
-            &copy; {new Date().getFullYear()} NilaMadhaba Travels Pvt. Ltd. All rights reserved.
+            &copy; {new Date().getFullYear()} NilaMadhaba Travels Pvt. Ltd. {t("footer.copyright")}
           </p>
           <div className="flex items-center gap-4 text-xs text-gray-600">
             <span className="flex items-center gap-1.5">
