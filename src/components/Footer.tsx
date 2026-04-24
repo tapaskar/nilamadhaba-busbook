@@ -81,9 +81,9 @@ function PlayStoreGlyph(props: React.SVGProps<SVGSVGElement>) {
 
 const quickLinks = [
   { href: "/about", label: "About Us" },
+  { href: "/corporate", label: "For Business" },
   { href: "/contact", label: "Contact" },
   { href: "/careers", label: "Careers" },
-  { href: "/press", label: "Press" },
 ];
 const supportLinks = [
   { href: "/help", label: "Help Centre" },

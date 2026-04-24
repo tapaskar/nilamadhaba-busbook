@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { BookingProvider } from "@/lib/store";
+import { I18nProvider } from "@/lib/i18n";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SupportHub from "@/components/SupportHub";
@@ -26,12 +27,14 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-white font-sans antialiased flex flex-col">
-        <BookingProvider>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <SupportHub />
-        </BookingProvider>
+        <I18nProvider>
+          <BookingProvider>
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <SupportHub />
+          </BookingProvider>
+        </I18nProvider>
       </body>
     </html>
   );

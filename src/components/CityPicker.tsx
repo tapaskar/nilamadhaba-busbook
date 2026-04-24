@@ -9,6 +9,12 @@ interface CityPickerProps {
   value: string;
   onChange: (cityId: string, cityName: string) => void;
   cities: City[];
+  /**
+   * City id to hide from the list — used so the destination picker can't
+   * list the same city as the origin (and vice-versa).
+   * Fixes UAT bug: "Same city selectable in FROM/TO".
+   */
+  excludeCityId?: string;
 }
 
 const POPULAR_LIMIT = 6;
@@ -18,6 +24,7 @@ export default function CityPicker({
   value,
   onChange,
   cities,
+  excludeCityId,
 }: CityPickerProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -40,8 +47,8 @@ export default function CityPicker({
   }, []);
 
   const activeCities = useMemo(
-    () => cities.filter((c) => c.is_active),
-    [cities]
+    () => cities.filter((c) => c.is_active && c.id !== excludeCityId),
+    [cities, excludeCityId]
   );
 
   const filtered = useMemo(() => {

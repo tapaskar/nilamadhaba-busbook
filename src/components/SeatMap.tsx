@@ -63,7 +63,25 @@ export default function SeatMap({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      {/* Prominent seat legend — pinned at the top so it's seen before scanning seats */}
+      <div className="rounded-xl bg-[#e8edf8]/60 border border-[#1a3a8f]/10 px-4 py-3">
+        <p className="text-[10px] font-bold text-[#1a3a8f] uppercase tracking-wider mb-2">
+          Seat colour guide
+        </p>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {legend.map(({ status, label }) => (
+            <div key={status} className="flex items-center gap-1.5">
+              <span
+                className={`inline-block h-5 w-5 rounded-md border-2 ${statusStyles[status]}`}
+                aria-hidden="true"
+              />
+              <span className="text-xs font-medium text-gray-700">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {layout.decks.map((deck) => {
         // Build a grid from seats
         const grid: (Seat | null)[][] = Array.from(
@@ -155,18 +173,6 @@ export default function SeatMap({
           </div>
         );
       })}
-
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 px-1">
-        {legend.map(({ status, label }) => (
-          <div key={status} className="flex items-center gap-1.5">
-            <span
-              className={`inline-block h-4 w-4 rounded border-2 ${statusStyles[status]}`}
-            />
-            <span className="text-xs text-gray-600">{label}</span>
-          </div>
-        ))}
-      </div>
 
       {selectedSeats.length > 0 && (
         <p className="text-xs text-gray-500">

@@ -27,6 +27,7 @@ import {
 import CityPicker from "@/components/CityPicker";
 import DatePicker from "@/components/DatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
+import { useT } from "@/lib/i18n";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LiveBookingTicker from "@/components/LiveBookingTicker";
 import DestinationCard from "@/components/DestinationCard";
@@ -72,6 +73,7 @@ function getTodayStr() {
 
 export default function HomePage() {
   const router = useRouter();
+  const t = useT();
   const [fromCity, setFromCity] = useState("");
   const [fromCityName, setFromCityName] = useState("");
   const [toCity, setToCity] = useState("");
@@ -148,34 +150,33 @@ export default function HomePage() {
             </div>
 
             <h1 className="text-[2.5rem] sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.02]">
-              Travel in Comfort,
+              {t("hero.title1")}
               <br />
-              <span className="text-gold-gradient">Arrive in Style</span>
+              <span className="text-gold-gradient">{t("hero.title2")}</span>
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-white/75 max-w-2xl mx-auto leading-relaxed">
-              Premium intercity bus travel across India. Volvo &amp; Scania coaches,
-              live tracking, and an on-time guarantee — or your money back.
+              {t("hero.subtitle")}
             </p>
 
             {/* Trust badges */}
             <div className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-white/70">
               <span className="flex items-center gap-1.5">
                 <Star className="h-4 w-4 fill-[#f5c842] stroke-[#f5c842]" />
-                <strong className="text-white">4.8</strong> Rated
+                <strong className="text-white">4.8</strong> {t("hero.rated")}
               </span>
               <span className="h-1 w-1 rounded-full bg-white/30" />
               <span>
-                <strong className="text-white">2.4M+</strong> Travellers
+                <strong className="text-white">2.4M+</strong> {t("hero.travellers")}
               </span>
               <span className="h-1 w-1 rounded-full bg-white/30" />
               <span>
-                <strong className="text-white">500+</strong> Daily trips
+                <strong className="text-white">500+</strong> {t("hero.dailyTrips")}
               </span>
               <span className="h-1 w-1 rounded-full bg-white/30" />
               <span className="flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-400" />
-                On-time guarantee
+                {t("hero.onTime")}
               </span>
             </div>
           </div>
@@ -210,6 +211,7 @@ export default function HomePage() {
                   setFromCityName(name);
                 }}
                 cities={cities}
+                excludeCityId={toCity}
               />
             </div>
 
@@ -231,6 +233,7 @@ export default function HomePage() {
                   setToCityName(name);
                 }}
                 cities={cities}
+                excludeCityId={fromCity}
               />
             </div>
           </div>
@@ -559,6 +562,70 @@ export default function HomePage() {
 
       {/* ═════════════════════════ TESTIMONIALS ═════════════════════════ */}
       <Testimonials />
+
+      {/* ═════════════════════════ LOYALTY PROGRAM ═════════════════════════ */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-24 sm:mt-32">
+        <ScrollReveal className="relative rounded-3xl bg-gradient-to-br from-[#fde68a] via-[#f5c842] to-[#e0b02c] p-8 sm:p-12 overflow-hidden">
+          <div className="absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#1a3a8f]/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/30 blur-3xl pointer-events-none" />
+
+          <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-[#1a1a2e] text-[#f5c842] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
+                <Sparkles className="h-3 w-3" />
+                NilaMadhaba RideClub
+              </div>
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#1a1a2e] tracking-tight leading-[1.05]">
+                Your 6th trip is on us.
+              </h2>
+              <p className="mt-4 text-base sm:text-lg text-[#1a1a2e]/80 max-w-lg">
+                Earn 5% back as RideCoins on every booking. Redeem them on
+                future trips, seat upgrades, or meals. Members also get
+                priority boarding and 24×7 dedicated support.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a
+                  href="/register"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#1a1a2e] hover:bg-[#0b0b1a] text-[#f5c842] px-5 py-3 text-sm font-bold shadow-lg transition-colors"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Join free
+                </a>
+                <a
+                  href="/help#loyalty"
+                  className="inline-flex items-center gap-2 rounded-xl bg-white/40 hover:bg-white/60 text-[#1a1a2e] px-5 py-3 text-sm font-bold transition-colors backdrop-blur-sm border border-[#1a1a2e]/10"
+                >
+                  How it works →
+                </a>
+              </div>
+            </div>
+
+            {/* Tier showcase */}
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { tier: "Silver",   trips: "5+",  perk: "5% off",  color: "#94a3b8" },
+                { tier: "Gold",     trips: "15+", perk: "8% off + free meal", color: "#fbbf24" },
+                { tier: "Platinum", trips: "30+", perk: "10% + lounge access", color: "#c084fc" },
+                { tier: "Diamond",  trips: "60+", perk: "15% + free reschedule", color: "#22d3ee" },
+              ].map((t) => (
+                <div
+                  key={t.tier}
+                  className="rounded-2xl bg-white/70 backdrop-blur-sm border border-white p-4 shadow-sm"
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span
+                      className="inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: t.color }}
+                    />
+                    <span className="text-sm font-extrabold text-[#1a1a2e]">{t.tier}</span>
+                  </div>
+                  <p className="text-xs text-[#1a1a2e]/70">{t.trips} trips · {t.perk}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
 
       {/* ═════════════════════════ CTA — APP DOWNLOAD ═════════════════════════ */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-24 sm:mt-32 mb-16">

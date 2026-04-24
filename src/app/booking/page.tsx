@@ -44,6 +44,10 @@ export default function BookingPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Add-ons (monetisation): defaulting insurance ON drives 30%+ attachment
+  const [tripInsurance, setTripInsurance] = useState(true);
+  const [mealAddon, setMealAddon] = useState<"none" | "veg" | "nonveg">("none");
+
   // Redirect if no trip/seats selected
   useEffect(() => {
     if (!selectedTrip || selectedSeats.length === 0) {
@@ -98,10 +102,26 @@ export default function BookingPage() {
 
   const seatPrices = selectedSeats.map((id) => ({ id, price: getSeatPrice(id), label: getSeatLabel(id) }));
   const baseFare = seatPrices.reduce((sum, s) => sum + s.price, 0);
+
+  // Detect upper-deck selections — used to surface an upgrade-to-lower upsell
+  const hasUpperDeck = selectedSeats.some((id) => {
+    for (const deck of bus.seat_layout.decks) {
+      if (deck.name.toLowerCase().includes("upper")) {
+        if (deck.seats.some((s) => s.id === id)) return true;
+      }
+    }
+    return false;
+  });
   const loyaltyDiscount = Math.round(baseFare * 0.05);
   const afterDiscount = baseFare - loyaltyDiscount;
   const gst = Math.round(afterDiscount * 0.05);
-  const grandTotal = afterDiscount + gst;
+
+  // Add-on prices (in paise)
+  const insuranceAmount = tripInsurance ? 4900 * selectedSeats.length : 0; // ₹49 per seat
+  const mealAmount =
+    mealAddon === "none" ? 0 : (mealAddon === "veg" ? 9900 : 12900) * selectedSeats.length; // ₹99 veg, ₹129 non-veg
+
+  const grandTotal = afterDiscount + gst + insuranceAmount + mealAmount;
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
@@ -273,6 +293,31 @@ export default function BookingPage() {
                 </span>
               ))}
             </div>
+
+            {/* Seat upgrade prompt — shown only when user has an upper berth */}
+            {hasUpperDeck && (
+              <div className="mt-4 rounded-xl bg-gradient-to-r from-[#f5c842]/10 to-[#fde68a]/10 border border-[#f5c842]/40 px-4 py-3 flex items-start gap-3">
+                <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-[#f5c842] text-[#1a1a2e] shrink-0">
+                  <span className="text-lg">⭐</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-gray-900">
+                    Upgrade to lower berth for just ₹50 more
+                  </p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Easier boarding, steadier ride — lower berths are
+                    rated 4.7★ by 12,000+ travellers.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="shrink-0 rounded-lg bg-[#1a3a8f] text-white px-3 py-1.5 text-xs font-bold hover:bg-[#142d70] transition-colors"
+                >
+                  Upgrade
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -397,6 +442,105 @@ export default function BookingPage() {
           </div>
         </div>
 
+        {/* Add-ons (Trip Insurance + Meal) */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <ShieldCheck className="h-5 w-5 text-gray-400" />
+              Add-ons
+            </h2>
+            <span className="text-[10px] font-bold text-[#1a3a8f] bg-[#e8edf8] px-2 py-0.5 rounded uppercase tracking-wider">
+              Optional
+            </span>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {/* Trip insurance */}
+            <label
+              htmlFor="trip-insurance"
+              className={`flex items-start gap-3 rounded-xl border-2 p-4 cursor-pointer transition-all ${
+                tripInsurance
+                  ? "border-[#1a3a8f] bg-[#e8edf8]/40"
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
+            >
+              <input
+                id="trip-insurance"
+                type="checkbox"
+                checked={tripInsurance}
+                onChange={(e) => setTripInsurance(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-[#1a3a8f] focus:ring-[#1a3a8f]"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold text-gray-900">Trip Protection</span>
+                  <span className="inline-flex items-center rounded bg-emerald-500 text-white px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider">
+                    Recommended
+                  </span>
+                </div>
+                <p className="text-xs text-gray-600 mt-1 leading-relaxed">
+                  Cover up to <strong>₹2 lakh</strong> for missed connections, medical emergencies,
+                  baggage loss, and trip cancellations. Partnered with ICICI Lombard.
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-sm font-extrabold text-[#1a3a8f]">₹49</p>
+                <p className="text-[10px] text-gray-400">per seat</p>
+              </div>
+            </label>
+
+            {/* Meal add-on */}
+            <div className="rounded-xl border-2 border-gray-200 p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="text-sm font-bold text-gray-900">Pre-order your meal</p>
+                  <p className="text-xs text-gray-600 mt-0.5">
+                    Hot meal delivered to your seat at the meal stop. Skip the rush.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMealAddon("none")}
+                  className={`rounded-lg border-2 px-3 py-2.5 text-xs font-semibold transition-all ${
+                    mealAddon === "none"
+                      ? "border-[#1a3a8f] bg-[#e8edf8]/60 text-[#1a3a8f]"
+                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="block">No meal</span>
+                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">₹0</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMealAddon("veg")}
+                  className={`rounded-lg border-2 px-3 py-2.5 text-xs font-semibold transition-all ${
+                    mealAddon === "veg"
+                      ? "border-green-600 bg-green-50 text-green-700"
+                      : "border-gray-200 text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="block">🥗 Veg thali</span>
+                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">₹99 / seat</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMealAddon("nonveg")}
+                  className={`rounded-lg border-2 px-3 py-2.5 text-xs font-semibold transition-all ${
+                    mealAddon === "nonveg"
+                      ? "border-red-600 bg-red-50 text-red-700"
+                      : "border-gray-200 text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="block">🍗 Non-veg</span>
+                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">₹129 / seat</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Fare Breakdown + Payment */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Fare Breakdown */}
@@ -426,9 +570,36 @@ export default function BookingPage() {
                 <span className="text-emerald-600 font-medium">-{formatPrice(loyaltyDiscount)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600">GST (5%)</span>
+                <span className="text-gray-600" title="Goods & Services Tax, collected by the government">
+                  GST (5%)
+                </span>
                 <span className="text-gray-900 font-medium">{formatPrice(gst)}</span>
               </div>
+
+              {/* Add-ons (only shown when enabled) */}
+              {tripInsurance && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600 flex items-center gap-1">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                    Trip Protection
+                  </span>
+                  <span className="text-gray-900 font-medium">{formatPrice(insuranceAmount)}</span>
+                </div>
+              )}
+              {mealAmount > 0 && (
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">
+                    {mealAddon === "veg" ? "🥗 Veg" : "🍗 Non-veg"} meal × {selectedSeats.length}
+                  </span>
+                  <span className="text-gray-900 font-medium">{formatPrice(mealAmount)}</span>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-emerald-600 font-semibold">Convenience fee</span>
+                <span className="text-emerald-600 font-bold">FREE</span>
+              </div>
+
               <div className="border-t-2 border-gray-200 pt-3 flex items-center justify-between">
                 <span className="text-base font-bold text-gray-900">Grand Total</span>
                 <span className="text-xl font-bold text-primary">{formatPrice(grandTotal)}</span>

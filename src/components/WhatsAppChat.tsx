@@ -74,7 +74,12 @@ export default function WhatsAppChat({
     const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
       message,
     )}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    // Try window.open; if blocked by popup-blocker, fall back to same-tab
+    // navigation so the user still lands on WhatsApp.
+    const win = window.open(url, "_blank", "noopener,noreferrer");
+    if (!win || win.closed || typeof win.closed === "undefined") {
+      window.location.href = url;
+    }
   }
 
   return (
@@ -145,7 +150,7 @@ export default function WhatsAppChat({
           <div className="p-4 bg-gray-50 border-b border-gray-100">
             <div className="bg-white rounded-2xl rounded-tl-none px-3.5 py-2.5 shadow-sm border border-gray-100 max-w-[90%]">
               <p className="text-sm text-gray-700">
-                👋 Hi there! How can we help you today?
+                👋 Hi there! Pick a question below to open WhatsApp with it already typed, or tap the green button to start a new chat.
               </p>
             </div>
           </div>

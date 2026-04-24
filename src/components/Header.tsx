@@ -11,6 +11,8 @@ import {
   X,
   User,
 } from "lucide-react";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useT } from "@/lib/i18n";
 
 const navLinks = [
   { href: "/search", label: "Search", icon: Search },
@@ -19,8 +21,15 @@ const navLinks = [
 ] as const;
 
 export default function Header() {
+  const t = useT();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+  const localisedNavLabels: Record<string, string> = {
+    "/search": t("nav.search"),
+    "/my-trips": t("nav.myTrips"),
+    "/help": t("nav.help"),
+  };
 
   // Scroll-aware: compact + stronger shadow after 20px
   useEffect(() => {
@@ -56,26 +65,27 @@ export default function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map(({ href, label, icon: Icon }) => (
+            {navLinks.map(({ href, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
                 className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-[#1a3a8f] hover:bg-[#e8edf8] transition-colors"
               >
                 <Icon className="h-4 w-4" />
-                {label}
+                {localisedNavLabels[href]}
               </Link>
             ))}
           </nav>
 
-          {/* Desktop login */}
+          {/* Desktop language + login */}
           <div className="hidden md:flex items-center gap-3">
+            <LanguageSwitcher />
             <Link
               href="/login"
               className="flex items-center gap-1.5 rounded-full border-2 border-[#1a3a8f] px-5 py-1.5 text-sm font-semibold text-[#1a3a8f] hover:bg-[#1a3a8f] hover:text-white hover:shadow-lg hover:shadow-[#1a3a8f]/30 transition-all"
             >
               <User className="h-4 w-4" />
-              Login
+              {t("nav.login")}
             </Link>
           </div>
 

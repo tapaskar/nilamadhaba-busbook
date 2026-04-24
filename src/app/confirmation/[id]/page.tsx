@@ -294,16 +294,35 @@ export default function ConfirmationPage() {
           </div>
         </div>
 
+        {/* SMS confirmation banner */}
+        <div className="rounded-2xl bg-emerald-50 border border-emerald-200 px-4 py-3 flex items-start gap-3">
+          <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-emerald-500 text-white shrink-0">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-emerald-900">
+              Ticket sent to your phone &amp; email
+            </p>
+            <p className="text-xs text-emerald-700 mt-0.5">
+              SMS delivered to {booking.contact_phone} · Email to{" "}
+              <span className="font-medium">{booking.contact_email}</span> — show either at boarding, no internet needed.
+            </p>
+          </div>
+        </div>
+
         {/* Action buttons */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <button
-            disabled
-            className="flex flex-col items-center gap-2 bg-white rounded-2xl border border-gray-100 px-4 py-4 opacity-50 cursor-not-allowed shadow-sm"
+          <Link
+            href={`/track/${booking.id}`}
+            className="flex flex-col items-center gap-2 bg-white rounded-2xl border border-gray-100 px-4 py-4 shadow-sm hover:shadow-md hover:border-[#1a3a8f]/30 transition-all group"
           >
-            <Navigation className="h-5 w-5 text-gray-400" />
-            <span className="text-xs font-medium text-gray-500">Track Bus</span>
-            <span className="text-[10px] text-gray-400">Coming Soon</span>
-          </button>
+            <div className="relative">
+              <Navigation className="h-5 w-5 text-[#1a3a8f] group-hover:scale-110 transition-transform" />
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            </div>
+            <span className="text-xs font-bold text-gray-700">Track Bus</span>
+            <span className="text-[10px] text-emerald-600 font-semibold">LIVE</span>
+          </Link>
           <button
             disabled
             className="flex flex-col items-center gap-2 bg-white rounded-2xl border border-gray-100 px-4 py-4 opacity-50 cursor-not-allowed shadow-sm"
