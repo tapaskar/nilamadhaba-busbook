@@ -2,20 +2,20 @@
 
 @theme {
   /* Brand Palette — Royal Blue & Gold */
-  --color-primary: #1a3a8f;          /* Royal Blue - brand, primary CTAs */
-  --color-primary-dark: #142d70;     /* Deeper royal blue for hover */
-  --color-primary-light: #e8edf8;    /* Ice Blue - surfaces */
-  --color-secondary: #2a52be;        /* Mid Blue - secondary */
+  --color-primary: #1a3a8f;          /* Royal Blue */
+  --color-primary-dark: #142d70;
+  --color-primary-light: #e8edf8;
+  --color-secondary: #2a52be;        /* Mid Blue */
   --color-secondary-dark: #1e3d95;
-  --color-accent: #f5c842;           /* Gold - accent, highlights */
+  --color-accent: #f5c842;           /* Gold */
   --color-accent-dark: #e0b02c;
-  --color-navy: #1a1a2e;             /* Deep Navy - dark sections */
-  --color-surface: #f8f9fc;          /* Cloud White - page bg */
+  --color-navy: #1a1a2e;             /* Deep Navy */
+  --color-surface: #f8f9fc;          /* Cloud White */
   --color-ice: #e8edf8;              /* Ice Blue */
 
   /* Seat states */
   --color-seat-available: #22c55e;
-  --color-seat-selected: #1a3a8f;    /* Royal blue when selected */
+  --color-seat-selected: #1a3a8f;
   --color-seat-booked: #cbd5e1;
   --color-seat-locked: #f5c842;
   --color-seat-ladies: #ec4899;
@@ -25,18 +25,152 @@ body {
   background-color: var(--color-surface);
 }
 
-/* Chat panel entrance animation */
+/* ──────────────────────────────────────────────────────────────
+   KEYFRAMES — motion vocabulary
+   ────────────────────────────────────────────────────────────── */
+
 @keyframes slide-up-fade {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-.animate-chat-in {
-  animation: slide-up-fade 200ms cubic-bezier(0.22, 1, 0.36, 1);
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(10px, -20px) scale(1.05); }
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0); }
+  33%      { transform: translate(30px, -40px); }
+  66%      { transform: translate(-20px, 20px); }
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+@keyframes ticker-up {
+  0%   { opacity: 0; transform: translateY(100%); }
+  15%  { opacity: 1; transform: translateY(0); }
+  85%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-100%); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(245, 200, 66, 0.3); }
+  50%      { box-shadow: 0 0 40px rgba(245, 200, 66, 0.6); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   UTILITY CLASSES
+   ────────────────────────────────────────────────────────────── */
+
+.animate-chat-in       { animation: slide-up-fade 200ms cubic-bezier(0.22, 1, 0.36, 1); }
+.animate-float-slow    { animation: float-slow 8s ease-in-out infinite; }
+.animate-float-orb     { animation: float-orb 14s ease-in-out infinite; }
+.animate-gradient      { background-size: 200% 200%; animation: gradient-shift 18s ease infinite; }
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s linear infinite;
+}
+.animate-marquee       { animation: marquee 30s linear infinite; }
+.animate-pulse-glow    { animation: pulse-glow 3s ease-in-out infinite; }
+.animate-spin-slow     { animation: spin-slow 40s linear infinite; }
+
+/* Scroll-reveal — elements start hidden, .is-visible class added by IntersectionObserver */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+              transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.reveal.delay-1 { transition-delay: 80ms;  }
+.reveal.delay-2 { transition-delay: 160ms; }
+.reveal.delay-3 { transition-delay: 240ms; }
+.reveal.delay-4 { transition-delay: 320ms; }
+.reveal.delay-5 { transition-delay: 400ms; }
+.reveal.delay-6 { transition-delay: 480ms; }
+
+/* Mesh gradient — cinematic hero background */
+.bg-mesh-navy {
+  background-color: #1a1a2e;
+  background-image:
+    radial-gradient(at 22% 15%, rgba(245, 200, 66, 0.18) 0px, transparent 50%),
+    radial-gradient(at 78% 20%, rgba(42, 82, 190, 0.35) 0px, transparent 50%),
+    radial-gradient(at 12% 82%, rgba(26, 58, 143, 0.5) 0px, transparent 50%),
+    radial-gradient(at 88% 75%, rgba(30, 61, 149, 0.4) 0px, transparent 50%);
+}
+
+/* Glass surface — cards over dark backgrounds */
+.glass {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+/* Gold gradient text */
+.text-gold-gradient {
+  background: linear-gradient(135deg, #f5c842 0%, #fde68a 50%, #f5c842 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+/* Hide scrollbar on horizontal scroll containers */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Respect reduced-motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float-slow,
+  .animate-float-orb,
+  .animate-gradient,
+  .animate-shimmer,
+  .animate-marquee,
+  .animate-pulse-glow,
+  .animate-spin-slow,
+  .text-gold-gradient {
+    animation: none !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
