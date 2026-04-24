@@ -1,100 +1,93 @@
-# NilaMadhaba — Backend Setup Guide
+# NilaMadhaba — Backend Setup Guide (Neon + Vercel)
 
-This guide walks you through going from the **demo mode** (in-memory data) to a
-fully functional backend on **Supabase + Vercel**.
+Go from **demo mode** (in-memory data) to a fully functional backend on
+**Neon Postgres** in about 10 minutes.
 
-**Total time: ~10 minutes.**
+Neon has a genuinely generous free tier:
+- 0.5 GB storage
+- 10 projects per account
+- Auto-suspend when idle (so you don't burn CPU hours)
+- Unlimited branches for dev/staging
+
+The recommended path is to install Neon through the **Vercel Marketplace** —
+the `DATABASE_URL` env var is auto-provisioned for you.
 
 ---
 
-## 1. Create your Supabase project
+## 1. Install Neon via Vercel Marketplace
 
-1. Visit https://database.new
-2. Sign in with GitHub (or your preferred provider)
-3. Create a new project:
-   - **Name**: `nilamadhaba-busbook`
-   - **Database Password**: save this — you'll need it once
-   - **Region**: choose the one closest to your users (e.g. `ap-south-1` for India)
-4. Wait ~2 minutes for the project to finish provisioning.
+1. Open your project in the [Vercel dashboard](https://vercel.com/dashboard).
+2. Go to **Storage** (left sidebar) → **Create Database** → **Neon**.
+3. Pick a region close to your users (e.g. `Asia Pacific (Mumbai)`).
+4. Click **Continue** → **Connect** to your Vercel project.
+
+Vercel automatically sets these env vars on your project (for both
+Preview and Production):
+
+- `DATABASE_URL` (pooled — what the app uses)
+- `DATABASE_URL_UNPOOLED`
+- `PGHOST`, `PGUSER`, `PGDATABASE`, `PGPASSWORD`
+- `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, ...
+
+Only `DATABASE_URL` is required by this app.
 
 ---
 
 ## 2. Apply the schema
 
-1. In the Supabase dashboard, go to **SQL Editor → New Query**.
-2. Open `supabase/migrations/20260424000000_init_schema.sql` from this repo.
-3. Copy the **entire file** into the SQL editor.
-4. Click **Run**. You should see `Success. No rows returned` (tables, indexes, RLS, and RPC functions are all created).
+1. In the Vercel Storage tab, click the Neon integration → **Open Console**.
+   (Or go to [console.neon.tech](https://console.neon.tech) directly.)
+2. Open the **SQL Editor**.
+3. Paste the contents of `db/migrations/001_init.sql` from this repo.
+4. Click **Run**.
 
-The migration creates:
+You should see `CREATE TABLE`, `CREATE INDEX`, and `CREATE FUNCTION`
+messages. That creates 10 tables + 5 RPC functions:
 
 | Table | Purpose |
 |---|---|
-| `profiles` | Extended user info (auto-synced with `auth.users` via trigger) |
-| `cities` | 12 operating cities |
-| `routes` | 12 route combinations |
-| `buses` | 8 buses with JSON seat layouts |
-| `schedules` | 18 recurring departures |
-| `schedule_instances` | Date-specific overrides (cancelled trips, price tweaks) |
-| `bookings` | The booking ledger |
-| `booking_passengers` | Per-seat passenger rows |
-| `seat_locks` | 10-minute exclusive seat holds during checkout |
+| `profiles` | User directory (FK target for bookings). Has a `guest-user` row pre-inserted. |
+| `cities` / `routes` | Geography |
+| `buses` | Fleet with JSON seat layouts |
+| `schedules` / `schedule_instances` | Recurring departures + date-specific overrides |
+| `bookings` / `booking_passengers` | The booking ledger |
+| `seat_locks` | 10-minute exclusive holds during checkout |
 | `reviews` | Post-trip ratings |
 
-Plus 5 RPC functions:
-
-| Function | Purpose |
-|---|---|
-| `get_booked_seats` | All booked seats for a trip on a date |
-| `get_locked_seats` | Seats held by *other* users during checkout |
-| `lock_seat` | Acquire a 10-min exclusive lock |
-| `create_booking` | Atomic booking + passenger creation |
-| `cleanup_expired_locks` | Sweeper for stale locks |
-
-RLS is enabled on every table with policies that let authenticated users see
-only their own data (bookings, locks, passengers) while reference data
-(cities, routes, buses, schedules, reviews) is publicly readable.
+Plus 5 RPCs: `get_booked_seats`, `get_locked_seats`, `lock_seat`,
+**`create_booking`** (atomic), `cleanup_expired_locks`.
 
 ---
 
-## 3. Get your API keys
+## 3. Pull DATABASE_URL locally
 
-1. In Supabase, go to **Settings → API**.
-2. Copy these two values:
-   - **Project URL** (e.g. `https://xxxxxxxxxxxx.supabase.co`)
-   - **service_role** key (the long one under "Project API keys")
+```bash
+vercel env pull .env.local
+```
 
-> ⚠️  The **service_role** key bypasses RLS. Treat it like a root password —
-> never commit it or ship it to the browser.
+This writes `DATABASE_URL=...` (among others) into `.env.local`.
 
 ---
 
 ## 4. Seed the database
 
-Create `.env.local` in the project root:
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxxxxxx.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon_key_from_settings>
-SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
-```
-
-Then run:
-
 ```bash
 node --env-file=.env.local scripts/seed.mjs
 ```
 
-You should see:
-
+Expected output:
 ```
-→ cities        … ✓ 12
-→ routes        … ✓ 12
-→ buses         … ✓ 8
-→ schedules     … ✓ 18
+→ Seeding ep-xxx-xxx.ap-southeast-1.aws.neon.tech
+
+→ cities       … ✓ 12
+→ routes       … ✓ 12
+→ buses        … ✓ 8
+→ schedules    … ✓ 18
 
 ✓ Seed complete.
 ```
+
+The script is idempotent — safe to re-run.
 
 ---
 
@@ -104,8 +97,12 @@ You should see:
 npm run dev
 ```
 
-Then visit http://localhost:3000/api/health — you should see:
+Then:
+```bash
+curl http://localhost:3000/api/health
+```
 
+You should see:
 ```json
 {
   "mode": "live",
@@ -114,36 +111,35 @@ Then visit http://localhost:3000/api/health — you should see:
 }
 ```
 
-Try the full flow: home → search → pick a bus → pick a seat → pay.
-Check your Supabase dashboard → **Table Editor → bookings** — your booking
-should be there, with matching rows in `booking_passengers`.
+Now try the full flow at http://localhost:3000 — search → pick a bus →
+pick a seat → pay. Then go to Neon → SQL Editor:
+
+```sql
+SELECT id, schedule_id, travel_date, total_amount, booked_at
+FROM bookings
+ORDER BY booked_at DESC
+LIMIT 5;
+```
+
+Your booking should be there, with matching rows in `booking_passengers`.
 
 ---
 
-## 6. Deploy to Vercel
+## 6. Deploy
 
-Add the env vars to Vercel (one-time):
-
-```bash
-vercel env add NEXT_PUBLIC_SUPABASE_URL production
-vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
-vercel env add SUPABASE_SERVICE_ROLE_KEY production
-# Paste each value when prompted
-```
-
-Or via the Vercel dashboard: **Project Settings → Environment Variables**.
-
-Then redeploy:
+Since Vercel already set the env vars when you installed the Neon
+integration, just redeploy:
 
 ```bash
-vercel --prod
+npx vercel --prod
 ```
 
-Verify at `https://<your-deployment>.vercel.app/api/health` that `mode: "live"`.
+Verify at `https://<your-app>.vercel.app/api/health` — should return
+`"mode": "live"`.
 
 ---
 
-## Appendix: API Reference
+## Appendix — API Reference
 
 | Method | Endpoint | Purpose |
 |---|---|---|
@@ -156,5 +152,31 @@ Verify at `https://<your-deployment>.vercel.app/api/health` that `mode: "live"`.
 | `POST` | `/api/bookings/[id]/cancel` | Cancel + compute refund |
 | `GET`  | `/api/admin/stats` | Aggregate dashboard stats |
 
-All endpoints gracefully degrade to mock data when Supabase env vars are
-absent, so you can demo the UI without a backend.
+Every endpoint auto-falls back to mock data when `DATABASE_URL` is not set.
+
+---
+
+## Appendix — Adding auth later
+
+The current code falls back to `userId = 'guest-user'` for bookings. To
+attribute bookings to real users, add any Next.js-compatible auth and
+pass the signed-in user's id in the booking POST body:
+
+```ts
+// client (after sign-in)
+fetch("/api/bookings", {
+  method: "POST",
+  body: JSON.stringify({
+    userId: session.user.id,   // ← pass through
+    scheduleId, travelDate, totalAmount, /* ... */
+  }),
+});
+```
+
+Recommended providers:
+- [Clerk](https://clerk.com) — free tier for 10k MAU, Vercel-native
+- [Auth.js](https://authjs.dev) — open source, any OAuth provider
+- [WorkOS AuthKit](https://workos.com/authkit) — free for 1M MAU
+
+The `create_booking` RPC automatically creates a `profiles` row for any
+new user id it sees, so no extra wiring is needed on the Postgres side.

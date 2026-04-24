@@ -3,7 +3,7 @@
 Frictionless intercity bus booking for a single-brand operator.
 
 **Live demo:** https://busbook-seven.vercel.app
-**Stack:** Next.js 15 · Tailwind v4 · Supabase (Postgres + Auth) · Vercel · React 19
+**Stack:** Next.js 15 · Tailwind v4 · Neon Postgres · Vercel · React 19
 
 ---
 
@@ -13,7 +13,7 @@ Frictionless intercity bus booking for a single-brand operator.
 - Interactive seat maps for AC Sleeper, AC Seater, Premium Sleeper, Non-AC Sleeper
 - Dynamic pricing (occupancy-based + weekend surcharge)
 - Live GPS tracking placeholder, boarding/dropping points per city
-- My Trips with cancel + refund computation
+- My Trips with cancel + refund computation (tiered by time-before-departure)
 - Admin dashboard with revenue charts, live trips, recent bookings
 - AI support chatbot ("Nila Assist") + WhatsApp direct chat
 - Royal Blue & Gold brand identity
@@ -25,14 +25,15 @@ Next.js App Router (SSR + API routes)
         ↓
   /api/trips, /api/seats, /api/bookings, /api/health, /api/admin/stats
         ↓
-  src/lib/data.ts  ← unified adapter: Supabase (live) or mocks (demo)
+  src/lib/data.ts  ← unified adapter: Neon (live) or mocks (demo)
         ↓
-  Supabase Postgres (tables + RLS + RPC functions)
+  Neon Postgres (tables + RPC functions for atomic bookings)
 ```
 
-The app **auto-detects** whether Supabase env vars are present.
-- **Live mode** (env vars set): real writes via Supabase, RLS enforced, RPCs for atomic bookings.
-- **Demo mode** (no env): in-memory mocks. Same UI, no persistence.
+The app **auto-detects** whether `DATABASE_URL` is set:
+
+- **Live mode**: real persistence via Neon, atomic seat locks + bookings via Postgres RPCs
+- **Demo mode** (no env): in-memory mocks, same UI, no persistence
 
 ## Quick start
 
@@ -43,18 +44,17 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 — fully functional with mock data.
+Fully functional with mock data at http://localhost:3000.
 
-### Live mode (with Supabase)
+### Live mode (with Neon)
 
-Follow the [SETUP.md](./SETUP.md) guide — takes ~10 minutes end-to-end:
+Follow [SETUP.md](./SETUP.md) — takes ~10 minutes:
 
-1. Create a Supabase project at https://database.new
-2. Run the migration in `supabase/migrations/`
-3. Copy API keys to `.env.local`
+1. Install Neon from Vercel Marketplace (Storage → Create Database → Neon)
+2. Run `db/migrations/001_init.sql` in the Neon SQL Editor
+3. `vercel env pull .env.local`
 4. `node --env-file=.env.local scripts/seed.mjs`
-5. `vercel env add ...` for each key
-6. `vercel --prod`
+5. `vercel --prod`
 
 ## Project structure
 
@@ -72,19 +72,20 @@ src/
     SupportBot.tsx     — AI chatbot widget
     WhatsAppChat.tsx   — WhatsApp floating widget
   lib/
-    data.ts       — unified Supabase/mock data adapter
+    data.ts       — unified Neon/mock data adapter
+    db.ts         — Neon SQL tag-function (lazy singleton)
     mock-data.ts  — demo-mode fallback data
     store.ts      — React Context + reducer for booking state
-    types.ts      — Database + domain types
-    supabase/     — server, client, admin helpers
+    types.ts      — Domain types (mirrors DB schema)
 
-supabase/
-  migrations/     — SQL schema + RLS + RPCs
+db/
+  migrations/
+    001_init.sql  — tables, indexes, RPC functions
 
 scripts/
-  seed.mjs        — seed cities, routes, buses, schedules
+  seed.mjs        — seed cities, routes, buses, schedules into Neon
 
-SETUP.md          — detailed backend setup guide
+SETUP.md          — step-by-step backend setup (Neon + Vercel)
 SYSTEM_DESIGN.md  — original architecture doc
 ```
 
@@ -92,10 +93,16 @@ SYSTEM_DESIGN.md  — original architecture doc
 
 | Var | Scope | Required |
 |---|---|---|
-| `NEXT_PUBLIC_SUPABASE_URL` | public | for live mode |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | public | for live mode |
-| `SUPABASE_SERVICE_ROLE_KEY` | server-only | for live mode |
+| `DATABASE_URL` | server-only | for live mode (auto-set by Vercel ⇄ Neon integration) |
 | `NEXT_PUBLIC_WHATSAPP_NUMBER` | public | optional (default: demo) |
+
+## Why Neon
+
+- **Free tier is genuinely usable**: 0.5 GB, 10 projects, auto-suspend when idle
+- **Zero-config on Vercel**: Marketplace integration auto-sets `DATABASE_URL`
+- **Pure Postgres**: any SQL you know works, including `pgcrypto`, `uuid`, JSONB, array types
+- **Serverless driver**: `@neondatabase/serverless` works in Edge + Node without connection pooling headaches
+- **Branching**: clone production DB into dev/preview environments in seconds
 
 ## License
 

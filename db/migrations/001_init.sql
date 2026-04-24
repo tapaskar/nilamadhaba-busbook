@@ -1,20 +1,21 @@
 -- ============================================================
--- NilaMadhaba Bus Booking Platform — Initial Schema
+-- NilaMadhaba Bus Booking Platform — Initial Schema (Neon)
 -- ============================================================
--- Tables, indexes, RLS policies, RPC functions.
--- Run via:  supabase db push
--- Or paste into:  SQL Editor → New Query → Run
+-- Plain Postgres — no Supabase-specific auth/RLS features.
+-- Paste into Neon SQL Editor → Run. Or:
+--   psql "$DATABASE_URL" -f db/migrations/001_init.sql
 -- ============================================================
 
--- Needed for gen_random_uuid()
 create extension if not exists "pgcrypto";
 
 -- ============================================================
 -- 1. PROFILES
---    1-to-1 with auth.users. Auto-created on signup via trigger.
+--    Optional user table. The app works fine without auth
+--    (falls back to 'guest-user'). If you wire up Clerk / Auth.js,
+--    insert rows here on first sign-in.
 -- ============================================================
 create table if not exists public.profiles (
-  id          uuid primary key references auth.users(id) on delete cascade,
+  id          text primary key,                 -- external auth provider user id
   full_name   text,
   phone       text,
   email       text,
@@ -22,25 +23,11 @@ create table if not exists public.profiles (
   created_at  timestamptz not null default now()
 );
 
--- Auto-insert a profile row whenever a new auth user is created
-create or replace function public.handle_new_user()
-returns trigger
-language plpgsql
-security definer
-set search_path = public
-as $$
-begin
-  insert into public.profiles (id, email, full_name)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'full_name', new.email))
+-- Lazy-insert a guest-user row so bookings can FK-reference it
+-- even without authentication wired up.
+insert into public.profiles (id, full_name, role)
+  values ('guest-user', 'Guest', 'user')
   on conflict (id) do nothing;
-  return new;
-end;
-$$;
-
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute function public.handle_new_user();
 
 -- ============================================================
 -- 2. CITIES
@@ -90,7 +77,6 @@ create index if not exists idx_buses_active on public.buses(is_active) where is_
 
 -- ============================================================
 -- 5. SCHEDULES
---    Repeating schedule template (e.g., every Mon/Wed/Fri 9pm BLR→CHN).
 -- ============================================================
 create table if not exists public.schedules (
   id              text primary key,
@@ -98,8 +84,8 @@ create table if not exists public.schedules (
   bus_id          text not null references public.buses(id),
   departure_time  time not null,
   arrival_time    time not null,
-  base_price      integer not null,   -- in paise
-  sleeper_price   integer,             -- in paise
+  base_price      integer not null,
+  sleeper_price   integer,
   days_of_week    integer[] not null default '{0,1,2,3,4,5,6}',
   is_active       boolean not null default true,
   valid_from      date not null default current_date,
@@ -111,7 +97,6 @@ create index if not exists idx_schedules_bus on public.schedules(bus_id);
 
 -- ============================================================
 -- 6. SCHEDULE_INSTANCES
---    Overrides for specific dates (e.g., cancelled, custom price).
 -- ============================================================
 create table if not exists public.schedule_instances (
   id                text primary key default gen_random_uuid()::text,
@@ -129,7 +114,7 @@ create index if not exists idx_schedule_instances_date on public.schedule_instan
 -- ============================================================
 create table if not exists public.bookings (
   id                    text primary key default gen_random_uuid()::text,
-  user_id               uuid not null references public.profiles(id) on delete restrict,
+  user_id               text not null references public.profiles(id) on delete restrict,
   schedule_id           text not null references public.schedules(id),
   travel_date           date not null,
   status                text not null default 'pending' check (status in ('pending', 'confirmed', 'cancelled', 'completed')),
@@ -165,15 +150,14 @@ create table if not exists public.booking_passengers (
 create index if not exists idx_booking_passengers_booking on public.booking_passengers(booking_id);
 
 -- ============================================================
--- 9. SEAT_LOCKS
---    Short-lived (10 min) exclusive holds during checkout.
+-- 9. SEAT_LOCKS — 10-minute exclusive holds during checkout
 -- ============================================================
 create table if not exists public.seat_locks (
   id           text primary key default gen_random_uuid()::text,
   schedule_id  text not null references public.schedules(id),
   travel_date  date not null,
   seat_number  text not null,
-  user_id      uuid not null references public.profiles(id),
+  user_id      text not null,
   locked_at    timestamptz not null default now(),
   expires_at   timestamptz not null default (now() + interval '10 minutes'),
   unique (schedule_id, travel_date, seat_number)
@@ -188,7 +172,7 @@ create index if not exists idx_seat_locks_user on public.seat_locks(user_id);
 create table if not exists public.reviews (
   id           text primary key default gen_random_uuid()::text,
   booking_id   text not null unique references public.bookings(id) on delete cascade,
-  user_id      uuid not null references public.profiles(id),
+  user_id      text not null,
   schedule_id  text not null references public.schedules(id),
   rating       integer not null check (rating between 1 and 5),
   comment      text,
@@ -208,8 +192,6 @@ create or replace function public.get_booked_seats(
 ) returns text[]
 language sql
 stable
-security definer
-set search_path = public
 as $$
   select coalesce(array_agg(distinct bp.seat_number), '{}')
   from public.booking_passengers bp
@@ -223,12 +205,10 @@ $$;
 create or replace function public.get_locked_seats(
   p_schedule_id text,
   p_travel_date date,
-  p_user_id uuid
+  p_user_id text
 ) returns text[]
 language sql
 stable
-security definer
-set search_path = public
 as $$
   select coalesce(array_agg(seat_number), '{}')
   from public.seat_locks
@@ -238,12 +218,10 @@ as $$
     and expires_at > now();
 $$;
 
--- Cleanup expired locks (call periodically via cron)
+-- Cleanup expired locks
 create or replace function public.cleanup_expired_locks()
 returns integer
 language plpgsql
-security definer
-set search_path = public
 as $$
 declare
   deleted_count integer;
@@ -255,26 +233,22 @@ begin
 end;
 $$;
 
--- Lock a seat for a user (returns true on success, false if already locked)
+-- Lock a seat for a user (returns true on success, false if unavailable)
 create or replace function public.lock_seat(
   p_schedule_id text,
   p_travel_date date,
   p_seat_number text,
-  p_user_id uuid
+  p_user_id text
 ) returns boolean
 language plpgsql
-security definer
-set search_path = public
 as $$
 begin
-  -- Clear expired lock on this seat first
   delete from public.seat_locks
   where schedule_id = p_schedule_id
     and travel_date = p_travel_date
     and seat_number = p_seat_number
     and expires_at < now();
 
-  -- Check if seat is already booked
   if exists (
     select 1 from public.booking_passengers bp
     join public.bookings b on b.id = bp.booking_id
@@ -286,7 +260,6 @@ begin
     return false;
   end if;
 
-  -- Try to acquire the lock; if another user already holds it, no-op
   insert into public.seat_locks (schedule_id, travel_date, seat_number, user_id)
   values (p_schedule_id, p_travel_date, p_seat_number, p_user_id)
   on conflict (schedule_id, travel_date, seat_number) do update
@@ -299,10 +272,9 @@ begin
 end;
 $$;
 
--- Atomic booking creation: verifies seats are free, creates booking + passengers,
--- releases the caller's locks on those seats.
+-- Atomic booking creation
 create or replace function public.create_booking(
-  p_user_id        uuid,
+  p_user_id        text,
   p_schedule_id    text,
   p_travel_date    date,
   p_total_amount   integer,
@@ -312,20 +284,21 @@ create or replace function public.create_booking(
   p_passengers     jsonb
 ) returns text
 language plpgsql
-security definer
-set search_path = public
 as $$
 declare
   v_booking_id text;
   v_passenger jsonb;
   v_seat_numbers text[];
 begin
-  -- Extract all seat numbers from passenger payload
+  -- Make sure the profile row exists (for guest flows)
+  insert into public.profiles (id, full_name, role)
+    values (p_user_id, p_contact_email, 'user')
+    on conflict (id) do nothing;
+
   select array_agg(p->>'seat_number')
     into v_seat_numbers
     from jsonb_array_elements(p_passengers) p;
 
-  -- Make sure none of these are already booked
   if exists (
     select 1
     from public.booking_passengers bp
@@ -338,7 +311,6 @@ begin
     raise exception 'SEAT_ALREADY_BOOKED' using errcode = 'P0001';
   end if;
 
-  -- Insert booking
   insert into public.bookings (
     user_id, schedule_id, travel_date, status,
     total_amount, payment_id, payment_status,
@@ -351,7 +323,6 @@ begin
   )
   returning id into v_booking_id;
 
-  -- Insert passengers
   for v_passenger in select * from jsonb_array_elements(p_passengers)
   loop
     insert into public.booking_passengers (
@@ -366,7 +337,6 @@ begin
     );
   end loop;
 
-  -- Release this user's locks on these seats
   delete from public.seat_locks
   where schedule_id = p_schedule_id
     and travel_date = p_travel_date
@@ -378,94 +348,5 @@ end;
 $$;
 
 -- ============================================================
--- ROW LEVEL SECURITY
--- ============================================================
-alter table public.profiles            enable row level security;
-alter table public.cities              enable row level security;
-alter table public.routes              enable row level security;
-alter table public.buses               enable row level security;
-alter table public.schedules           enable row level security;
-alter table public.schedule_instances  enable row level security;
-alter table public.bookings            enable row level security;
-alter table public.booking_passengers  enable row level security;
-alter table public.seat_locks          enable row level security;
-alter table public.reviews             enable row level security;
-
--- ── Public-read reference data ──
-drop policy if exists "cities_public_read"     on public.cities;
-drop policy if exists "routes_public_read"     on public.routes;
-drop policy if exists "buses_public_read"      on public.buses;
-drop policy if exists "schedules_public_read"  on public.schedules;
-drop policy if exists "instances_public_read"  on public.schedule_instances;
-drop policy if exists "reviews_public_read"    on public.reviews;
-
-create policy "cities_public_read"     on public.cities              for select using (true);
-create policy "routes_public_read"     on public.routes              for select using (true);
-create policy "buses_public_read"      on public.buses               for select using (true);
-create policy "schedules_public_read"  on public.schedules           for select using (true);
-create policy "instances_public_read"  on public.schedule_instances  for select using (true);
-create policy "reviews_public_read"    on public.reviews             for select using (true);
-
--- ── Profiles ──
-drop policy if exists "profiles_self_read"    on public.profiles;
-drop policy if exists "profiles_self_update"  on public.profiles;
-create policy "profiles_self_read"
-  on public.profiles for select
-  using (auth.uid() = id);
-create policy "profiles_self_update"
-  on public.profiles for update
-  using (auth.uid() = id);
-
--- ── Bookings: users see & manage their own ──
-drop policy if exists "bookings_self_read"    on public.bookings;
-drop policy if exists "bookings_self_insert"  on public.bookings;
-drop policy if exists "bookings_self_update"  on public.bookings;
-create policy "bookings_self_read"
-  on public.bookings for select
-  using (auth.uid() = user_id);
-create policy "bookings_self_insert"
-  on public.bookings for insert
-  with check (auth.uid() = user_id);
-create policy "bookings_self_update"
-  on public.bookings for update
-  using (auth.uid() = user_id);
-
--- ── Passengers: through parent booking ──
-drop policy if exists "passengers_self_read"    on public.booking_passengers;
-drop policy if exists "passengers_self_insert"  on public.booking_passengers;
-create policy "passengers_self_read"
-  on public.booking_passengers for select
-  using (exists (
-    select 1 from public.bookings b
-    where b.id = booking_id and b.user_id = auth.uid()
-  ));
-create policy "passengers_self_insert"
-  on public.booking_passengers for insert
-  with check (exists (
-    select 1 from public.bookings b
-    where b.id = booking_id and b.user_id = auth.uid()
-  ));
-
--- ── Seat Locks: users can only see/create/delete their own ──
-drop policy if exists "locks_self_read"    on public.seat_locks;
-drop policy if exists "locks_self_insert"  on public.seat_locks;
-drop policy if exists "locks_self_delete"  on public.seat_locks;
-create policy "locks_self_read"
-  on public.seat_locks for select
-  using (auth.uid() = user_id);
-create policy "locks_self_insert"
-  on public.seat_locks for insert
-  with check (auth.uid() = user_id);
-create policy "locks_self_delete"
-  on public.seat_locks for delete
-  using (auth.uid() = user_id);
-
--- ── Reviews: self-write, public-read already granted above ──
-drop policy if exists "reviews_self_insert"  on public.reviews;
-create policy "reviews_self_insert"
-  on public.reviews for insert
-  with check (auth.uid() = user_id);
-
--- ============================================================
--- Done.
+-- Done. Run 001_seed.sql or `node scripts/seed.mjs` to load data.
 -- ============================================================

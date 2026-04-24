@@ -1,38 +1,31 @@
 #!/usr/bin/env node
 /**
- * Seed a Supabase project with cities, routes, buses, and schedules.
+ * Seed a Neon Postgres database with cities, routes, buses, schedules.
  *
  * Prerequisites:
- *   - SUPABASE_URL                   (your project URL, e.g. https://xxx.supabase.co)
- *   - SUPABASE_SERVICE_ROLE_KEY      (service-role key, from Settings → API)
- *   - Migrations already applied     (supabase/migrations/20260424000000_init_schema.sql)
+ *   - DATABASE_URL  (pooled connection string — see Neon console)
+ *   - Migration applied  (db/migrations/001_init.sql)
  *
  * Usage:
- *   export SUPABASE_URL=https://xxx.supabase.co
- *   export SUPABASE_SERVICE_ROLE_KEY=eyJh...
- *   node scripts/seed.mjs
- *
- * Or pass .env.local values:
  *   node --env-file=.env.local scripts/seed.mjs
+ * or:
+ *   DATABASE_URL=postgres://... node scripts/seed.mjs
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { neon } from "@neondatabase/serverless";
 
-const SUPABASE_URL =
-  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const DATABASE_URL = process.env.DATABASE_URL;
 
-if (!SUPABASE_URL || !SERVICE_KEY) {
+if (!DATABASE_URL) {
   console.error(
-    "✗ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars.\n" +
-      "  Export them, or run with:  node --env-file=.env.local scripts/seed.mjs",
+    "✗ Missing DATABASE_URL env var.\n" +
+      "  Get it from the Neon console → Connection string, then:\n" +
+      "    node --env-file=.env.local scripts/seed.mjs",
   );
   process.exit(1);
 }
 
-const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
-  auth: { persistSession: false },
-});
+const sql = neon(DATABASE_URL);
 
 // ─── Data definitions (mirrors src/lib/mock-data.ts) ──────────────────────
 
@@ -156,23 +149,97 @@ const schedules = [
 
 // ─── Seed execution ─────────────────────────────────────────────────────
 
-async function seedTable(name, rows) {
-  process.stdout.write(`→ ${name.padEnd(14)}… `);
-  const { error } = await sb.from(name).upsert(rows, { onConflict: "id" });
-  if (error) {
-    console.error(`✗ ${error.message}`);
-    throw error;
+async function upsertCities() {
+  process.stdout.write(`→ cities       … `);
+  for (const c of cities) {
+    await sql`
+      INSERT INTO cities (id, name, state, is_active)
+      VALUES (${c.id}, ${c.name}, ${c.state}, ${c.is_active})
+      ON CONFLICT (id) DO UPDATE
+        SET name = excluded.name,
+            state = excluded.state,
+            is_active = excluded.is_active
+    `;
   }
-  console.log(`✓ ${rows.length}`);
+  console.log(`✓ ${cities.length}`);
+}
+
+async function upsertRoutes() {
+  process.stdout.write(`→ routes       … `);
+  for (const r of routes) {
+    await sql`
+      INSERT INTO routes (id, origin_city_id, destination_city_id,
+                          distance_km, estimated_duration_minutes, is_active)
+      VALUES (${r.id}, ${r.origin_city_id}, ${r.destination_city_id},
+              ${r.distance_km}, ${r.estimated_duration_minutes}, ${r.is_active})
+      ON CONFLICT (id) DO UPDATE
+        SET origin_city_id = excluded.origin_city_id,
+            destination_city_id = excluded.destination_city_id,
+            distance_km = excluded.distance_km,
+            estimated_duration_minutes = excluded.estimated_duration_minutes,
+            is_active = excluded.is_active
+    `;
+  }
+  console.log(`✓ ${routes.length}`);
+}
+
+async function upsertBuses() {
+  process.stdout.write(`→ buses        … `);
+  for (const b of buses) {
+    await sql`
+      INSERT INTO buses (id, name, registration_number, bus_type,
+                         total_seats, seat_layout, amenities, photos, is_active)
+      VALUES (${b.id}, ${b.name}, ${b.registration_number}, ${b.bus_type},
+              ${b.total_seats}, ${JSON.stringify(b.seat_layout)}::jsonb,
+              ${b.amenities}, ${b.photos}, ${b.is_active})
+      ON CONFLICT (id) DO UPDATE
+        SET name = excluded.name,
+            registration_number = excluded.registration_number,
+            bus_type = excluded.bus_type,
+            total_seats = excluded.total_seats,
+            seat_layout = excluded.seat_layout,
+            amenities = excluded.amenities,
+            photos = excluded.photos,
+            is_active = excluded.is_active
+    `;
+  }
+  console.log(`✓ ${buses.length}`);
+}
+
+async function upsertSchedules() {
+  process.stdout.write(`→ schedules    … `);
+  for (const s of schedules) {
+    await sql`
+      INSERT INTO schedules (id, route_id, bus_id, departure_time, arrival_time,
+                             base_price, sleeper_price, days_of_week,
+                             is_active, valid_from, valid_until)
+      VALUES (${s.id}, ${s.route_id}, ${s.bus_id}, ${s.departure_time}, ${s.arrival_time},
+              ${s.base_price}, ${s.sleeper_price}, ${s.days_of_week},
+              ${s.is_active}, ${s.valid_from}, ${s.valid_until})
+      ON CONFLICT (id) DO UPDATE
+        SET route_id = excluded.route_id,
+            bus_id = excluded.bus_id,
+            departure_time = excluded.departure_time,
+            arrival_time = excluded.arrival_time,
+            base_price = excluded.base_price,
+            sleeper_price = excluded.sleeper_price,
+            days_of_week = excluded.days_of_week,
+            is_active = excluded.is_active,
+            valid_from = excluded.valid_from,
+            valid_until = excluded.valid_until
+    `;
+  }
+  console.log(`✓ ${schedules.length}`);
 }
 
 async function main() {
-  console.log(`→ Seeding ${SUPABASE_URL}\n`);
+  const host = DATABASE_URL.match(/@([^/]+)/)?.[1] || "(neon)";
+  console.log(`→ Seeding ${host}\n`);
 
-  await seedTable("cities", cities);
-  await seedTable("routes", routes);
-  await seedTable("buses", buses);
-  await seedTable("schedules", schedules);
+  await upsertCities();
+  await upsertRoutes();
+  await upsertBuses();
+  await upsertSchedules();
 
   console.log(`\n✓ Seed complete.`);
   console.log(
