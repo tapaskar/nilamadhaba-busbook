@@ -21,13 +21,15 @@ import {
  * next-intl / i18next when translation volume grows beyond ~50 strings.
  */
 
-export type Locale = "en" | "hi" | "ta" | "te";
+export type Locale = "en" | "hi" | "ta" | "te" | "or" | "bn";
 
 export const locales: { code: Locale; label: string; native: string }[] = [
   { code: "en", label: "English",  native: "English"  },
   { code: "hi", label: "Hindi",    native: "हिन्दी"   },
+  { code: "bn", label: "Bengali",  native: "বাংলা"    },
   { code: "ta", label: "Tamil",    native: "தமிழ்"   },
   { code: "te", label: "Telugu",   native: "తెలుగు"  },
+  { code: "or", label: "Odia",     native: "ଓଡ଼ିଆ"    },
 ];
 
 type Dict = Record<string, string>;
@@ -164,7 +166,73 @@ const te: Dict = {
   "why.comfort":         "ప్రీమియం సౌకర్యం",
 };
 
-const dicts: Record<Locale, Dict> = { en, hi, ta, te };
+const or: Dict = {
+  "nav.search":          "ଖୋଜନ୍ତୁ",
+  "nav.myTrips":         "ମୋର ଯାତ୍ରା",
+  "nav.help":            "ସହାୟତା",
+  "nav.login":           "ଲଗ୍ ଇନ୍",
+
+  "hero.title1":         "ଆରାମରେ ଯାତ୍ରା କରନ୍ତୁ,",
+  "hero.title2":         "ଶୈଳୀରେ ପହଞ୍ଚନ୍ତୁ",
+  "hero.subtitle":       "ସମଗ୍ର ଭାରତରେ ପ୍ରିମିୟମ ଆନ୍ତଃନଗରୀ ବସ୍ ଯାତ୍ରା। ଭୋଲଭୋ ଓ ସ୍କାନିଆ କୋଚ୍, ଲାଇଭ୍ ଟ୍ରାକିଂ, ଏବଂ ସମୟରେ ପହଞ୍ଚିବାର ଗ୍ୟାରେଣ୍ଟି — କିମ୍ବା ଆପଣଙ୍କ ଟଙ୍କା ଫେରସ୍ତ।",
+  "hero.rated":          "ରେଟେଡ୍",
+  "hero.travellers":     "ଯାତ୍ରୀ",
+  "hero.dailyTrips":     "ଦୈନିକ ଯାତ୍ରା",
+  "hero.onTime":         "ସମୟ ଗ୍ୟାରେଣ୍ଟି",
+
+  "search.from":         "ଠାରୁ",
+  "search.to":           "ପର୍ଯ୍ୟନ୍ତ",
+  "search.date":         "ଯାତ୍ରା ତାରିଖ",
+  "search.cta":          "ବସ୍ ଖୋଜନ୍ତୁ",
+  "search.today":        "ଆଜି",
+  "search.tomorrow":     "ଆସନ୍ତାକାଲି",
+  "search.trust":        "256-ବିଟ୍ SSL · କୌଣସି ବୁକିଂ ଶୁଳ୍କ ନାହିଁ · ତତ୍କ୍ଷଣାତ୍ ଫେରସ୍ତ",
+
+  "routes.section":      "ଲୋକପ୍ରିୟ ମାର୍ଗ",
+  "routes.heading":      "କେଉଁଠିକୁ ଯାଉଛନ୍ତି?",
+  "routes.subtitle":     "ଦକ୍ଷିଣ ଓ ପଶ୍ଚିମ ଭାରତର ସବୁଠାରୁ ପ୍ରିୟ ମାର୍ଗ — ପ୍ରତ୍ୟେକଟି ଦିନରେ ଅନେକ ଥର ଚାଲେ।",
+
+  "why.heading":         "ଭାରତର ଯାତ୍ରା ଶୈଳୀ ପାଇଁ ନିର୍ମିତ",
+  "why.onTime":          "ସମୟ ଗ୍ୟାରେଣ୍ଟି",
+  "why.cancel":          "ମାଗଣା କ୍ୟାନ୍ସେଲ୍",
+  "why.tracking":        "ଲାଇଭ୍ GPS ଟ୍ରାକିଂ",
+  "why.comfort":         "ପ୍ରିମିୟମ ଆରାମ",
+};
+
+const bn: Dict = {
+  "nav.search":          "খুঁজুন",
+  "nav.myTrips":         "আমার ভ্রমণ",
+  "nav.help":            "সাহায্য",
+  "nav.login":           "লগ ইন",
+
+  "hero.title1":         "আরামে ভ্রমণ করুন,",
+  "hero.title2":         "স্টাইলে পৌঁছান",
+  "hero.subtitle":       "সারা ভারতে প্রিমিয়াম আন্তঃনগর বাস ভ্রমণ। ভলভো ও স্ক্যানিয়া কোচ, লাইভ ট্র্যাকিং এবং সময়মতো পৌঁছানোর গ্যারান্টি — অথবা আপনার টাকা ফেরত।",
+  "hero.rated":          "রেটেড",
+  "hero.travellers":     "যাত্রী",
+  "hero.dailyTrips":     "দৈনিক যাত্রা",
+  "hero.onTime":         "সময়ের গ্যারান্টি",
+
+  "search.from":         "থেকে",
+  "search.to":           "পর্যন্ত",
+  "search.date":         "ভ্রমণের তারিখ",
+  "search.cta":          "বাস খুঁজুন",
+  "search.today":        "আজ",
+  "search.tomorrow":     "আগামীকাল",
+  "search.trust":        "256-বিট SSL · কোনো বুকিং ফি নেই · তাত্ক্ষণিক রিফান্ড",
+
+  "routes.section":      "জনপ্রিয় রুট",
+  "routes.heading":      "কোথায় যাচ্ছেন?",
+  "routes.subtitle":     "দক্ষিণ ও পশ্চিম ভারতের সবচেয়ে প্রিয় রুট — প্রতিটি দিনে কয়েকবার চলে।",
+
+  "why.heading":         "ভারতের ভ্রমণের জন্য তৈরি",
+  "why.onTime":          "সময়ের গ্যারান্টি",
+  "why.cancel":          "বিনামূল্যে বাতিলকরণ",
+  "why.tracking":        "লাইভ GPS ট্র্যাকিং",
+  "why.comfort":         "প্রিমিয়াম আরাম",
+};
+
+const dicts: Record<Locale, Dict> = { en, hi, bn, ta, te, or };
 
 // ─── Context ──────────────────────────────────────────────────────────────
 

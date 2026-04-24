@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Calendar,
@@ -21,6 +22,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  LogOut,
 } from "lucide-react";
 import {
   BarChart,
@@ -242,8 +244,54 @@ function StatCard({
 
 // ── Main component ──
 
+type LiveStats = {
+  today: { bookings: number; revenue_paise: number };
+  this_month: { bookings: number; revenue_paise: number };
+  recent_bookings: { id: string; total_amount: number; contact_email: string; booked_at: string; status: string }[];
+};
+
+function formatINR(paise: number): string {
+  return "\u20B9" + Math.round(paise / 100).toLocaleString("en-IN");
+}
+
 export default function AdminDashboard() {
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [admin, setAdmin] = useState<{ email: string; full_name: string | null } | null>(null);
+  const [stats, setStats] = useState<LiveStats | null>(null);
+
+  // Load admin profile + dashboard stats
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/admin/me", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        if (!d?.admin) {
+          router.replace("/admin/login");
+        } else {
+          setAdmin(d.admin);
+        }
+      })
+      .catch(() => router.replace("/admin/login"));
+
+    fetch("/api/admin/stats", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        if (d?.stats) setStats(d.stats);
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [router]);
+
+  async function handleLogout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.replace("/admin/login");
+  }
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)] bg-gray-50">
@@ -304,45 +352,71 @@ export default function AdminDashboard() {
           </button>
           <h1 className="text-lg font-semibold text-gray-900">Dashboard</h1>
           <span className="hidden text-sm text-gray-500 sm:block">
-            Welcome back, Operator
+            Welcome back{admin?.full_name ? `, ${admin.full_name.split(" ")[0]}` : ""}
           </span>
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-3">
             <span className="hidden rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700 sm:inline-flex">
               All systems operational
             </span>
+            {admin && (
+              <div className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-50">
+                <div className="flex items-center justify-center h-7 w-7 rounded-full bg-[#1a3a8f] text-[#f5c842] text-xs font-bold">
+                  {admin.email.charAt(0).toUpperCase()}
+                </div>
+                <span className="text-xs font-medium text-gray-700">
+                  {admin.email}
+                </span>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
         </header>
 
         {/* Scrollable content */}
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
-          {/* Stat cards */}
+          {/* Live data badge */}
+          {stats && (
+            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 px-2.5 py-1 text-xs font-bold">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              Live data from Neon Postgres
+            </div>
+          )}
+
+          {/* Stat cards — live values when available, otherwise placeholder */}
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             <StatCard
-              title="Today's Trips"
-              value="12"
+              title="Today's Bookings"
+              value={stats ? String(stats.today.bookings) : "—"}
               trend="up"
-              trendLabel="+8% vs last week"
+              trendLabel="vs yesterday"
               icon={Calendar}
             />
             <StatCard
               title="Today's Revenue"
-              value="₹4,23,500"
+              value={stats ? formatINR(stats.today.revenue_paise) : "—"}
               trend="up"
-              trendLabel="+12% vs last week"
+              trendLabel="vs yesterday"
               icon={IndianRupee}
             />
             <StatCard
-              title="Avg Occupancy"
-              value="82%"
+              title="Month Bookings"
+              value={stats ? String(stats.this_month.bookings) : "—"}
               trend="up"
-              trendLabel="+5% vs last week"
+              trendLabel="month-to-date"
               icon={Gauge}
             />
             <StatCard
-              title="On-Time Rate"
-              value="91%"
-              trend="down"
-              trendLabel="-2% vs last week"
+              title="Month Revenue"
+              value={stats ? formatINR(stats.this_month.revenue_paise) : "—"}
+              trend="up"
+              trendLabel="month-to-date"
               icon={CheckCircle2}
             />
           </div>
