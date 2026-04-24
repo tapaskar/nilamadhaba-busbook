@@ -153,8 +153,34 @@ function rid() {
   return Math.random().toString(36).slice(2, 10);
 }
 
-export default function SupportBot() {
-  const [open, setOpen] = useState(false);
+/**
+ * Props:
+ *   open?       If provided, component is "controlled" — parent manages state
+ *               and the built-in launcher FAB is hidden. Pair with `onClose`.
+ *   onClose?    Called when the user hits the close (X) button in the panel.
+ *   onBack?     If set, replaces the close (X) button with a back (←) icon —
+ *               used by SupportHub to return to the launcher menu.
+ */
+export default function SupportBot({
+  open: controlledOpen,
+  onClose: controlledOnClose,
+  onBack,
+}: {
+  open?: boolean;
+  onClose?: () => void;
+  onBack?: () => void;
+} = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled) {
+      if (!v) controlledOnClose?.();
+    } else {
+      setInternalOpen(v);
+    }
+  };
+
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [messages, setMessages] = useState<Msg[]>([
@@ -249,40 +275,51 @@ export default function SupportBot() {
 
   return (
     <>
-      {/* Floating button */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? "Close support chat" : "Open support chat"}
-        className="fixed bottom-6 right-24 z-40 flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-[#1a3a8f] to-[#1a1a2e] text-[#f5c842] shadow-xl shadow-[#1a3a8f]/30 hover:scale-105 hover:shadow-2xl active:scale-95 transition-all duration-200"
-      >
-        {open ? (
-          <X className="h-6 w-6" />
-        ) : (
-          <>
-            <Headphones className="h-6 w-6" />
-            {/* Gold pulse ring */}
-            <span className="absolute inset-0 rounded-full bg-[#f5c842]/30 animate-ping" />
-            {/* Notification dot */}
-            <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center h-5 w-5 rounded-full bg-[#f5c842] text-[#1a1a2e] text-[10px] font-bold border-2 border-white">
-              1
-            </span>
-          </>
-        )}
-      </button>
+      {/* Floating button — only render in uncontrolled (standalone) mode */}
+      {!isControlled && (
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          aria-label={open ? "Close support chat" : "Open support chat"}
+          className="fixed bottom-6 right-24 z-40 flex items-center justify-center h-14 w-14 rounded-full bg-gradient-to-br from-[#1a3a8f] to-[#1a1a2e] text-[#f5c842] shadow-xl shadow-[#1a3a8f]/30 hover:scale-105 hover:shadow-2xl active:scale-95 transition-all duration-200"
+        >
+          {open ? (
+            <X className="h-6 w-6" />
+          ) : (
+            <>
+              <Headphones className="h-6 w-6" />
+              <span className="absolute inset-0 rounded-full bg-[#f5c842]/30 animate-ping" />
+              <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center h-5 w-5 rounded-full bg-[#f5c842] text-[#1a1a2e] text-[10px] font-bold border-2 border-white">
+                1
+              </span>
+            </>
+          )}
+        </button>
+      )}
 
       {/* Chat panel */}
       {open && (
         <div className="fixed bottom-24 right-6 z-40 w-[calc(100vw-3rem)] sm:w-96 h-[32rem] max-h-[calc(100vh-8rem)] rounded-2xl bg-white shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-chat-in">
           {/* Header — Royal Blue gradient with gold accents */}
           <div className="relative bg-gradient-to-br from-[#1a3a8f] to-[#1a1a2e] p-4 text-white overflow-hidden shrink-0">
-            {/* Gold orb */}
             <div className="absolute -top-4 -right-4 h-20 w-20 rounded-full bg-[#f5c842]/20 blur-2xl" />
             <div className="relative flex items-center gap-3">
+              {onBack && (
+                <button
+                  type="button"
+                  onClick={onBack}
+                  aria-label="Back to menu"
+                  className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors shrink-0"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                  </svg>
+                </button>
+              )}
               <div className="flex items-center justify-center h-11 w-11 rounded-xl bg-[#f5c842] text-[#1a1a2e] shadow-lg">
                 <Bot className="h-6 w-6" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <p className="font-bold text-base">Nila Assist</p>
                   <Sparkles className="h-3.5 w-3.5 text-[#f5c842]" />
@@ -292,6 +329,16 @@ export default function SupportBot() {
                   Online • AI-powered
                 </div>
               </div>
+              {isControlled && !onBack && (
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Close chat"
+                  className="flex items-center justify-center h-8 w-8 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors shrink-0"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
 
