@@ -130,13 +130,59 @@ export default function BookingPage() {
     // Dispatch passengers to store
     dispatch({ type: "SET_PASSENGERS", payload: passengers });
 
-    // Simulate payment delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // Compute total (mirror of reducer logic, but we need it before POST)
+    let totalAmount = 0;
+    for (const p of passengers) {
+      const seatInfo = bus.seat_layout.decks
+        .flatMap((d) => d.seats)
+        .find((s) => s.id === p.seatNumber);
+      if (
+        seatInfo?.price_tier === "sleeper" &&
+        trip.effective_sleeper_price
+      ) {
+        totalAmount += trip.effective_sleeper_price;
+      } else {
+        totalAmount += trip.effective_price;
+      }
+    }
 
-    // Confirm booking
+    // POST to the bookings API — works in both live (Supabase) and demo mode
+    let serverBookingId: string | null = null;
+    try {
+      const res = await fetch("/api/bookings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          scheduleId: schedule.id,
+          travelDate: trip.travel_date,
+          totalAmount,
+          contactEmail,
+          contactPhone,
+          passengers: passengers.map((p) => ({
+            seat_number: p.seatNumber,
+            name: p.name,
+            age: Number(p.age),
+            gender: p.gender,
+            is_primary: p.isPrimary,
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrors({ form: data.error || "Payment failed. Please try again." });
+        setIsPaying(false);
+        return;
+      }
+      serverBookingId = data.id as string;
+    } catch (e) {
+      console.error("Booking POST failed:", e);
+      // Continue with mock booking id in case of network failure (demo-safe)
+    }
+
+    // Confirm booking locally
     dispatch({
       type: "CONFIRM_BOOKING",
-      payload: { contactEmail, contactPhone },
+      payload: { contactEmail, contactPhone, serverBookingId },
     });
 
     setIsPaying(false);

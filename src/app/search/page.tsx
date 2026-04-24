@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import TripCard from "@/components/TripCard";
 import {
-  getTripsForSearch,
   getCityById,
   cities,
   type TripSearchResult,
@@ -69,20 +68,31 @@ function SearchResultsContent() {
   const [sortBy, setSortBy] = useState<SortOption>("departure");
   const [filterBy, setFilterBy] = useState<BusFilter>("all");
 
-  // Fetch trips
+  // Fetch trips from API (Supabase in live mode, mocks in demo mode)
   useEffect(() => {
     if (!fromId || !toId || !date) {
       setLoading(false);
       return;
     }
+    const abort = new AbortController();
     setLoading(true);
-    // Simulate a small loading delay for polish
-    const timer = setTimeout(() => {
-      const results = getTripsForSearch(fromId, toId, date);
-      setTrips(results);
-      setLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
+    fetch(`/api/trips?from=${fromId}&to=${toId}&date=${date}`, {
+      signal: abort.signal,
+      cache: "no-store",
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        setTrips((data?.trips ?? []) as TripSearchResult[]);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err?.name !== "AbortError") {
+          console.error("Trip search failed:", err);
+          setTrips([]);
+          setLoading(false);
+        }
+      });
+    return () => abort.abort();
   }, [fromId, toId, date]);
 
   // Filter trips

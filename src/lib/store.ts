@@ -69,7 +69,11 @@ export type BookingAction =
   | { type: "SET_PASSENGERS"; payload: PassengerDetail[] }
   | {
       type: "CONFIRM_BOOKING";
-      payload: { contactEmail: string; contactPhone: string };
+      payload: {
+        contactEmail: string;
+        contactPhone: string;
+        serverBookingId?: string | null;
+      };
     }
   | { type: "CANCEL_BOOKING"; payload: string } // booking id
   | { type: "SET_BOOKING_STATE"; payload: BookingFlowState }
@@ -205,6 +209,14 @@ function bookingReducer(
           isPrimary: p.isPrimary,
         })),
       });
+
+      // Prefer the real booking ID from the server when live-mode is active
+      if (action.payload.serverBookingId) {
+        booking.id = action.payload.serverBookingId;
+        for (const p of passengers) {
+          p.booking_id = action.payload.serverBookingId;
+        }
+      }
 
       const confirmedInfo: ConfirmedBookingInfo = {
         booking,
