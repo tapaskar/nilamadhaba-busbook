@@ -16,6 +16,7 @@ import {
   LogOut,
   ShieldCheck,
   UserCog,
+  Layout,
 } from "lucide-react";
 
 /**
@@ -31,15 +32,16 @@ import {
  */
 
 const navItems = [
-  { href: "/admin",            label: "Dashboard",   icon: LayoutDashboard },
-  { href: "/admin/bookings",   label: "Bookings",    icon: Ticket          },
-  { href: "/admin/schedules",  label: "Schedules",   icon: Calendar        },
-  { href: "/admin/fleet",      label: "Fleet",       icon: Bus             },
-  { href: "/admin/customers",  label: "Customers",   icon: Users           },
-  { href: "/admin/revenue",    label: "Revenue",     icon: IndianRupee     },
-  { href: "/admin/users",      label: "Admin Users", icon: ShieldCheck     },
-  { href: "/admin/account",    label: "My Account",  icon: UserCog         },
-  { href: "/admin/settings",   label: "Settings",    icon: Settings        },
+  { href: "/admin",            label: "Dashboard",    icon: LayoutDashboard },
+  { href: "/admin/bookings",   label: "Bookings",     icon: Ticket          },
+  { href: "/admin/schedules",  label: "Schedules",    icon: Calendar        },
+  { href: "/admin/fleet",      label: "Fleet",        icon: Bus             },
+  { href: "/admin/landing",    label: "Landing page", icon: Layout          },
+  { href: "/admin/customers",  label: "Customers",    icon: Users           },
+  { href: "/admin/revenue",    label: "Revenue",      icon: IndianRupee     },
+  { href: "/admin/users",      label: "Admin Users",  icon: ShieldCheck     },
+  { href: "/admin/account",    label: "My Account",   icon: UserCog         },
+  { href: "/admin/settings",   label: "Settings",     icon: Settings        },
 ];
 
 export default function AdminLayout({ children }: { children: ReactNode }) {

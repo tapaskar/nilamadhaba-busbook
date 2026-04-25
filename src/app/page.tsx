@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
@@ -72,6 +72,17 @@ function getTodayStr() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+type CmsSection = {
+  id: string;
+  type: string;
+  position: number;
+  settings: Record<string, unknown>;
+  blocks: { id: string; type: string; settings: Record<string, unknown> }[];
+};
+
+const DEFAULT_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1756020897176-8c381b24d276?auto=format&fit=crop&w=1920&q=75";
+
 export default function HomePage() {
   const router = useRouter();
   const t = useT();
@@ -80,6 +91,35 @@ export default function HomePage() {
   const [toCity, setToCity] = useState("");
   const [toCityName, setToCityName] = useState("");
   const [date, setDate] = useState(getTodayStr());
+
+  // CMS-driven sections (hero image, offers carousel). Falls back to
+  // defaults if the API errors or the database hasn't seeded sections.
+  const [cmsSections, setCmsSections] = useState<CmsSection[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/cms/page?slug=home", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (Array.isArray(d?.sections)) setCmsSections(d.sections);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const heroSection = cmsSections.find((s) => s.type === "hero");
+  const offersSection = cmsSections.find((s) => s.type === "offers");
+
+  // Hero settings — pull from CMS with fallback to defaults
+  const heroImage = (heroSection?.settings.image_url as string | undefined) || DEFAULT_HERO_IMAGE;
+  const cmsEyebrow = heroSection?.settings.eyebrow as string | undefined;
+  const cmsTitle1 = heroSection?.settings.title_line1 as string | undefined;
+  const cmsTitle2 = heroSection?.settings.title_line2 as string | undefined;
+  const cmsSubtitle = heroSection?.settings.subtitle as string | undefined;
+  const showTicker = heroSection?.settings.show_ticker !== false; // default true
 
   function swapCities() {
     setFromCity(toCity);
@@ -104,8 +144,9 @@ export default function HomePage() {
         {/* Background bus photograph */}
         <div className="absolute inset-0 pointer-events-none">
           <Image
-            src="https://images.unsplash.com/photo-1756020897176-8c381b24d276?auto=format&fit=crop&w=1920&q=75"
-            alt="NilaMadhaba luxury coach on a city street at night"
+            key={heroImage}
+            src={heroImage}
+            alt="NilaMadhaba luxury coach"
             fill
             priority
             sizes="100vw"
@@ -145,19 +186,28 @@ export default function HomePage() {
 
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-40 sm:pt-20 sm:pb-48">
           <div className="text-center max-w-3xl mx-auto">
-            {/* Live social proof */}
-            <div className="mb-6 min-h-[32px] flex items-center justify-center">
-              <LiveBookingTicker />
-            </div>
+            {/* Live social proof — toggleable from CMS hero settings */}
+            {showTicker && (
+              <div className="mb-6 min-h-[32px] flex items-center justify-center">
+                <LiveBookingTicker />
+              </div>
+            )}
+
+            {cmsEyebrow && (
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1.5 text-xs font-semibold text-white/90">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#f5c842] animate-pulse" />
+                {cmsEyebrow}
+              </div>
+            )}
 
             <h1 className="text-[2.5rem] sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.02]">
-              {t("hero.title1")}
+              {cmsTitle1 ?? t("hero.title1")}
               <br />
-              <span className="text-gold-gradient">{t("hero.title2")}</span>
+              <span className="text-gold-gradient">{cmsTitle2 ?? t("hero.title2")}</span>
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-white/75 max-w-2xl mx-auto leading-relaxed">
-              {t("hero.subtitle")}
+              {cmsSubtitle ?? t("hero.subtitle")}
             </p>
 
             {/* Trust badges */}
@@ -272,6 +322,100 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* ═════════════════════════ OFFERS (CMS-driven) ═════════════════════════ */}
+      {offersSection && offersSection.blocks.length > 0 && (
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-24 sm:mt-28">
+          <ScrollReveal className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#f5c842]/15 text-[#1a3a8f] px-3.5 py-1 text-xs font-bold uppercase tracking-wider mb-4">
+              <Sparkles className="h-3 w-3 text-[#f5c842]" />
+              {String(offersSection.settings.heading ?? "Today's offers")}
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight">
+              {String(offersSection.settings.heading ?? "Today's offers")}
+            </h2>
+            {Boolean(offersSection.settings.subtitle) && (
+              <p className="mt-3 text-gray-500 max-w-xl mx-auto">
+                {String(offersSection.settings.subtitle)}
+              </p>
+            )}
+          </ScrollReveal>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {offersSection.blocks.map((b, i) => {
+              const s = b.settings as {
+                title?: string;
+                description?: string;
+                image_url?: string;
+                badge?: string;
+                accent_color?: string;
+                cta_label?: string;
+                cta_url?: string;
+              };
+              const accent = s.accent_color || "#1a3a8f";
+              return (
+                <ScrollReveal
+                  key={b.id}
+                  delay={((i % 3) + 1) as 1 | 2 | 3}
+                  className="group relative overflow-hidden rounded-3xl bg-[#1a1a2e] shadow-lg shadow-gray-900/10 hover:shadow-2xl hover:shadow-gray-900/25 hover:-translate-y-1 transition-all duration-500"
+                >
+                  {/* Image */}
+                  {s.image_url && (
+                    <div className="relative aspect-[16/10] overflow-hidden">
+                      <Image
+                        src={s.image_url}
+                        alt={s.title ?? ""}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, 100vw"
+                        className="object-cover transition-transform duration-[1500ms] group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
+                      {s.badge && (
+                        <span
+                          className="absolute top-4 left-4 inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white shadow-lg"
+                          style={{ backgroundColor: accent }}
+                        >
+                          {s.badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Content */}
+                  <div className="absolute bottom-0 left-0 right-0 p-5 text-white">
+                    {s.title && (
+                      <h3 className="text-lg font-extrabold tracking-tight mb-1">
+                        {s.title}
+                      </h3>
+                    )}
+                    {s.description && (
+                      <p className="text-xs text-white/75 mb-3 line-clamp-2">
+                        {s.description}
+                      </p>
+                    )}
+                    {s.cta_label && s.cta_url && (
+                      <a
+                        href={s.cta_url}
+                        className="inline-flex items-center gap-1 text-xs font-bold rounded-full px-3 py-1.5 transition-transform group-hover:translate-x-1"
+                        style={{ backgroundColor: accent, color: "#fff" }}
+                      >
+                        {s.cta_label}
+                        <ArrowRight className="h-3 w-3" />
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Hover accent bar */}
+                  <div
+                    className="absolute bottom-0 left-0 right-0 h-1 transition-transform duration-500 origin-left scale-x-0 group-hover:scale-x-100"
+                    style={{ backgroundColor: accent }}
+                  />
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* ═════════════════════════ ANIMATED STATS ═════════════════════════ */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-24 sm:mt-28">
