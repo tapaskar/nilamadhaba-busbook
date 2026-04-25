@@ -14,6 +14,7 @@ import {
   Bus,
   Clock,
   Eye,
+  Pencil,
 } from "lucide-react";
 
 type Tab = "routes" | "schedules" | "occupancy";
@@ -72,6 +73,8 @@ export default function AdminSchedulesPage() {
 
   const [routeModal, setRouteModal] = useState(false);
   const [scheduleModal, setScheduleModal] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<RouteRow | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<ScheduleRow | null>(null);
 
   async function loadAll() {
     setLoading(true);
@@ -209,22 +212,32 @@ export default function AdminSchedulesPage() {
                       )}
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          if (!confirm(`${r.is_active ? "Deactivate" : "Reactivate"} ${r.origin_name} → ${r.destination_name}?`)) return;
-                          await fetch(`/api/admin/routes/${r.id}`, {
-                            method: "PATCH",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({ isActive: !r.is_active }),
-                          });
-                          loadAll();
-                        }}
-                        title={r.is_active ? "Deactivate" : "Reactivate"}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
-                      >
-                        <Power className="h-4 w-4" />
-                      </button>
+                      <div className="inline-flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setEditingRoute(r)}
+                          title="Edit"
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:text-[#1a3a8f] hover:bg-[#e8edf8]/50 transition-colors"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!confirm(`${r.is_active ? "Deactivate" : "Reactivate"} ${r.origin_name} → ${r.destination_name}?`)) return;
+                            await fetch(`/api/admin/routes/${r.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ isActive: !r.is_active }),
+                            });
+                            loadAll();
+                          }}
+                          title={r.is_active ? "Deactivate" : "Reactivate"}
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                        >
+                          <Power className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -333,6 +346,14 @@ export default function AdminSchedulesPage() {
                       <div className="inline-flex items-center gap-1">
                         <button
                           type="button"
+                          onClick={() => setEditingSchedule(s)}
+                          title="Edit"
+                          className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:text-[#1a3a8f] hover:bg-[#e8edf8]/50 transition-colors"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
                           onClick={async () => {
                             if (!confirm(`${s.is_active ? "Deactivate" : "Reactivate"} this schedule?`)) return;
                             await fetch(`/api/admin/schedules/${s.id}`, {
@@ -398,6 +419,31 @@ export default function AdminSchedulesPage() {
           onClose={() => setScheduleModal(false)}
           onCreated={() => {
             setScheduleModal(false);
+            loadAll();
+          }}
+        />
+      )}
+
+      {/* Edit-route modal */}
+      {editingRoute && (
+        <EditRouteModal
+          route={editingRoute}
+          onClose={() => setEditingRoute(null)}
+          onSaved={() => {
+            setEditingRoute(null);
+            loadAll();
+          }}
+        />
+      )}
+
+      {/* Edit-schedule modal */}
+      {editingSchedule && (
+        <EditScheduleModal
+          schedule={editingSchedule}
+          buses={buses}
+          onClose={() => setEditingSchedule(null)}
+          onSaved={() => {
+            setEditingSchedule(null);
             loadAll();
           }}
         />
@@ -894,6 +940,289 @@ function StatTile({ label, value, accent }: { label: string; value: string; acce
       <p className="text-2xl font-extrabold mt-1" style={{ color: accent }}>
         {value}
       </p>
+    </div>
+  );
+}
+
+// ─── EditRouteModal ─────────────────────────────────────────────────
+
+function EditRouteModal({
+  route,
+  onClose,
+  onSaved,
+}: {
+  route: RouteRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [km, setKm] = useState(route.distance_km?.toString() ?? "");
+  const [mins, setMins] = useState(route.estimated_duration_minutes?.toString() ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setSubmitting(true);
+    const res = await fetch(`/api/admin/routes/${route.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        distance_km: km ? parseInt(km, 10) : null,
+        estimated_duration_minutes: mins ? parseInt(mins, 10) : null,
+      }),
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      const d = await res.json();
+      setErr(d.error || "Failed to save");
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div>
+            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <Pencil className="h-4 w-4 text-[#1a3a8f]" />
+              Edit route
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {route.origin_name} → {route.destination_name}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={submit} className="p-6 space-y-4">
+          {err && (
+            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5">
+              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-700">{err}</p>
+            </div>
+          )}
+
+          <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 text-xs text-gray-600">
+            <p className="font-bold text-gray-800 mb-1">Route ID</p>
+            <p className="font-mono">{route.id}</p>
+            <p className="mt-2 text-[11px] text-gray-500">
+              The cities and route ID can&apos;t be changed once created. To
+              switch cities, deactivate this route and create a new one.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Distance (km)</label>
+              <input
+                type="number"
+                min="0"
+                value={km}
+                onChange={(e) => setKm(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Duration (min)</label>
+              <input
+                type="number"
+                min="0"
+                value={mins}
+                onChange={(e) => setMins(e.target.value)}
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none"
+              />
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center gap-2 justify-end">
+            <button type="button" onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Cancel</button>
+            <button type="submit" disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1a3a8f] hover:bg-[#142d70] disabled:opacity-50 text-white px-4 py-2 text-sm font-bold">
+              {submitting ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── EditScheduleModal ──────────────────────────────────────────────
+
+function EditScheduleModal({
+  schedule,
+  buses,
+  onClose,
+  onSaved,
+}: {
+  schedule: ScheduleRow;
+  buses: BusOption[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [busId, setBusId] = useState(schedule.bus_id);
+  const [departure, setDeparture] = useState(schedule.departure_time.slice(0, 5));
+  const [arrival, setArrival] = useState(schedule.arrival_time.slice(0, 5));
+  const [basePriceRupees, setBasePriceRupees] = useState(
+    (schedule.base_price / 100).toFixed(2).replace(/\.00$/, ""),
+  );
+  const [sleeperPriceRupees, setSleeperPriceRupees] = useState(
+    schedule.sleeper_price ? (schedule.sleeper_price / 100).toFixed(2).replace(/\.00$/, "") : "",
+  );
+  const [days, setDays] = useState<number[]>(schedule.days_of_week);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  function toggleDay(d: number) {
+    setDays((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d].sort()));
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    if (days.length === 0) {
+      setErr("Select at least one operating day");
+      return;
+    }
+    if (!basePriceRupees) {
+      setErr("Base price is required");
+      return;
+    }
+    setSubmitting(true);
+    const res = await fetch(`/api/admin/schedules/${schedule.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        bus_id: busId,
+        departure_time: departure,
+        arrival_time: arrival,
+        base_price: Math.round(parseFloat(basePriceRupees) * 100),
+        sleeper_price: sleeperPriceRupees ? Math.round(parseFloat(sleeperPriceRupees) * 100) : null,
+        days_of_week: days,
+      }),
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      const d = await res.json();
+      setErr(d.error || "Failed to save");
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
+          <div>
+            <h3 className="text-base font-bold text-gray-900 flex items-center gap-2">
+              <Pencil className="h-4 w-4 text-[#1a3a8f]" />
+              Edit schedule
+            </h3>
+            <p className="text-xs text-gray-500 mt-0.5">
+              {schedule.origin_name} → {schedule.destination_name}
+            </p>
+          </div>
+          <button type="button" onClick={onClose} aria-label="Close" className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form onSubmit={submit} className="p-6 space-y-4 overflow-y-auto">
+          {err && (
+            <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3.5 py-2.5">
+              <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-700">{err}</p>
+            </div>
+          )}
+
+          <div className="rounded-xl bg-gray-50 border border-gray-100 p-3 text-xs text-gray-600">
+            <p className="font-bold text-gray-800 mb-1">Schedule ID</p>
+            <p className="font-mono">{schedule.id}</p>
+            <p className="mt-2 text-[11px] text-gray-500">
+              The route can&apos;t be changed once created. Move to a different
+              route by deactivating this and creating a new schedule.
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Bus</label>
+            <select
+              required
+              value={busId}
+              onChange={(e) => setBusId(e.target.value)}
+              className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm bg-white focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none"
+            >
+              {/* Make sure the currently-assigned bus is selectable even if inactive */}
+              {!buses.some((b) => b.id === busId) && (
+                <option value={busId}>{schedule.bus_name} · {schedule.total_seats} seats (current)</option>
+              )}
+              {buses.map((b) => (
+                <option key={b.id} value={b.id}>
+                  {b.name} · {b.total_seats} seats
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Departure</label>
+              <input type="time" required value={departure} onChange={(e) => setDeparture(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Arrival</label>
+              <input type="time" required value={arrival} onChange={(e) => setArrival(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none" />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Base price (₹)</label>
+              <input type="number" required min="0" step="0.01" value={basePriceRupees} onChange={(e) => setBasePriceRupees(e.target.value)} className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none" />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Sleeper price (₹)</label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={sleeperPriceRupees}
+                onChange={(e) => setSleeperPriceRupees(e.target.value)}
+                placeholder="optional"
+                className="w-full rounded-xl border border-gray-200 px-3 py-2 text-sm focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5">Operating days</label>
+            <div className="flex gap-1.5">
+              {dayLabels.map((d, i) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(i)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-colors ${
+                    days.includes(i) ? "bg-[#1a3a8f] text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-2 flex items-center gap-2 justify-end">
+            <button type="button" onClick={onClose} className="rounded-xl px-4 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-100">Cancel</button>
+            <button type="submit" disabled={submitting} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#1a3a8f] hover:bg-[#142d70] disabled:opacity-50 text-white px-4 py-2 text-sm font-bold">
+              {submitting ? "Saving…" : "Save changes"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

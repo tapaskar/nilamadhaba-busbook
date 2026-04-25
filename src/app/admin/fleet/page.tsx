@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Bus,
   Plus,
@@ -13,6 +14,7 @@ import {
   Wifi,
   Zap,
   Coffee,
+  Pencil,
 } from "lucide-react";
 
 type BusRow = {
@@ -250,6 +252,13 @@ export default function AdminFleetPage() {
                   </td>
                   <td className="px-5 py-3 text-right">
                     <div className="inline-flex items-center gap-1">
+                      <Link
+                        href={`/admin/fleet/${r.id}`}
+                        title="Configure bus"
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-gray-500 hover:text-[#1a3a8f] hover:bg-[#e8edf8]/50 transition-colors"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Link>
                       <button
                         type="button"
                         onClick={() => toggleBus(r)}

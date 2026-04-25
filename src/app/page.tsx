@@ -32,7 +32,8 @@ import AnimatedCounter from "@/components/AnimatedCounter";
 import LiveBookingTicker from "@/components/LiveBookingTicker";
 import DestinationCard from "@/components/DestinationCard";
 import Testimonials from "@/components/Testimonials";
-import { cities } from "@/lib/mock-data";
+import { cities as fallbackCities } from "@/lib/mock-data";
+import type { City } from "@/lib/types";
 import { formatPrice, formatDuration } from "@/lib/constants";
 
 const popularRoutes = [
@@ -96,6 +97,9 @@ export default function HomePage() {
   // defaults if the API errors or the database hasn't seeded sections.
   const [cmsSections, setCmsSections] = useState<CmsSection[]>([]);
 
+  // Cities — live from Neon when available, in-memory fallback otherwise.
+  const [cities, setCities] = useState<City[]>(fallbackCities);
+
   useEffect(() => {
     let cancelled = false;
     fetch("/api/cms/page?slug=home", { cache: "no-store" })
@@ -103,6 +107,13 @@ export default function HomePage() {
       .then((d) => {
         if (cancelled) return;
         if (Array.isArray(d?.sections)) setCmsSections(d.sections);
+      })
+      .catch(() => {});
+    fetch("/api/cities", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled) return;
+        if (Array.isArray(d?.cities) && d.cities.length > 0) setCities(d.cities);
       })
       .catch(() => {});
     return () => {

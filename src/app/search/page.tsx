@@ -16,7 +16,6 @@ import {
 import TripCard from "@/components/TripCard";
 import {
   getCityById,
-  cities,
   type TripSearchResult,
 } from "@/lib/mock-data";
 import { useBooking } from "@/lib/store";
