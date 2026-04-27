@@ -232,9 +232,6 @@ export async function getSchedulesForRoute(
         AND r.origin_city_id = ${fromCityId}
         AND r.destination_city_id = ${toCityId}
         AND ${dayOfWeek} = ANY(s.days_of_week)
-        -- When searching for today's date, skip buses that have already
-        -- departed in IST. ${isToday}::boolean OR ${ist.time}::time guard
-        -- avoids the comparison entirely on future dates.
         AND (NOT ${isToday}::boolean OR s.departure_time > ${ist.time}::time)
       ORDER BY s.departure_time
     `) as unknown as ScheduleJoinRow[];
