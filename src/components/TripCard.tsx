@@ -19,6 +19,7 @@ import {
 import type { ScheduleWithDetails } from "@/lib/types";
 import SeatMap from "./SeatMap";
 import { useT } from "@/lib/i18n";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 interface TripCardProps {
   trip: ScheduleWithDetails;
@@ -77,6 +78,7 @@ export default function TripCard({
   bookedSeats,
 }: TripCardProps) {
   const t = useT();
+  const settings = useSiteSettings();
   const duration = trip.route.estimated_duration_minutes;
   const availableSeats = useMemo(
     () => trip.bus.total_seats - (trip.booked_seat_count ?? 0),
@@ -323,8 +325,8 @@ export default function TripCard({
           {/* Price summary + transparent breakdown */}
           {selectedSeats.length > 0 && (() => {
             const subtotal = trip.base_price * selectedSeats.length;
-            const gst = Math.round(subtotal * 0.05);
-            const convenience = 0;
+            const gst = Math.round(subtotal * (settings.gst_pct / 100));
+            const convenience = settings.convenience_fee_paise;
             const total = subtotal + gst + convenience;
             return (
               <div className="rounded-xl bg-white border border-gray-200 overflow-hidden">
@@ -345,12 +347,18 @@ export default function TripCard({
                     <span>{formatPrice(subtotal)}</span>
                   </div>
                   <div className="flex items-center justify-between text-gray-600">
-                    <span>{t("trip.gst")}</span>
+                    <span>GST ({settings.gst_pct}%)</span>
                     <span>{formatPrice(gst)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-emerald-600">
-                    <span>{t("trip.convenience")}</span>
-                    <span className="font-semibold">{t("trip.free")}</span>
+                  <div className="flex items-center justify-between">
+                    <span className={convenience > 0 ? "text-gray-600" : "text-emerald-600 font-semibold"}>
+                      {t("trip.convenience")}
+                    </span>
+                    {convenience > 0 ? (
+                      <span className="text-gray-600">{formatPrice(convenience)}</span>
+                    ) : (
+                      <span className="font-semibold text-emerald-600">{t("trip.free")}</span>
+                    )}
                   </div>
                   <div className="pt-2 mt-2 border-t border-gray-100 flex items-center justify-between">
                     <span className="font-bold text-gray-900">{t("trip.total")}</span>

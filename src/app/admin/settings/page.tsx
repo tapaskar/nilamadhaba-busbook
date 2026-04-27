@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Settings,
   Phone,
@@ -9,58 +9,51 @@ import {
   Calendar,
   CheckCircle2,
   AlertCircle,
+  Percent,
+  IndianRupee,
+  ShieldCheck,
 } from "lucide-react";
 
-const FIELDS = [
-  {
-    key: "support_phone",
-    label: "Support phone",
-    icon: Phone,
-    type: "tel",
-    placeholder: "1800-123-4567",
-    help: "Toll-free number shown in the support hub and footer.",
-  },
-  {
-    key: "support_email",
-    label: "Support email",
-    icon: Mail,
-    type: "email",
-    placeholder: "support@nilamadhaba.com",
-    help: "Reply-to address for SMS / email confirmations.",
-  },
-  {
-    key: "support_whatsapp",
-    label: "WhatsApp number (no +, no spaces)",
-    icon: Phone,
-    type: "tel",
-    placeholder: "919876543210",
-    help: "Used by the WhatsApp deep-link in the support hub.",
-  },
-  {
-    key: "support_hours",
-    label: "Support hours",
-    icon: Clock,
-    type: "text",
-    placeholder: "24×7",
-    help: 'e.g. "24×7" or "9 AM – 9 PM, Mon–Sat"',
-  },
-  {
-    key: "booking_window_days",
-    label: "Booking window (days)",
-    icon: Calendar,
-    type: "number",
-    placeholder: "60",
-    help: "How far in advance customers can book.",
-  },
-  {
-    key: "cancel_free_hours",
-    label: "Free-cancellation window (hours)",
-    icon: Clock,
-    type: "number",
-    placeholder: "12",
-    help: "Refund 100% if cancelled at least this many hours before departure.",
-  },
-] as const;
+type FieldDef = {
+  key: string;
+  label: string;
+  icon: typeof Phone;
+  type: "tel" | "email" | "text" | "number";
+  placeholder: string;
+  help: string;
+  /** Optional grouping label rendered as an h3 above the field */
+  group?: string;
+};
+
+const FIELDS: FieldDef[] = [
+  // ─── Support contacts ─────────────────────────
+  { group: "Support contacts", key: "support_phone",       label: "Support phone",                       icon: Phone,        type: "tel",    placeholder: "1800-123-4567",       help: "Toll-free number shown in the support hub and footer." },
+  { key: "support_email",                                  label: "Support email",                       icon: Mail,         type: "email",  placeholder: "support@nilamadhaba.com", help: "Reply-to address for SMS / email confirmations." },
+  { key: "support_whatsapp",                               label: "WhatsApp number (no +, no spaces)",   icon: Phone,        type: "tel",    placeholder: "919876543210",        help: "Used by the WhatsApp deep-link in the support hub." },
+  { key: "support_hours",                                  label: "Support hours",                       icon: Clock,        type: "text",   placeholder: "24×7",                help: 'e.g. "24×7" or "9 AM – 9 PM, Mon–Sat"' },
+
+  // ─── Booking policy ────────────────────────────
+  { group: "Booking policy",  key: "booking_window_days",  label: "Booking window (days)",               icon: Calendar,     type: "number", placeholder: "60",                  help: "How far in advance customers can book." },
+  { key: "cancel_free_hours",                              label: "Free-cancellation window (hours)",    icon: Clock,        type: "number", placeholder: "12",                  help: "Refund 100% if cancelled at least this many hours before departure." },
+
+  // ─── Tax + discount rates ─────────────────────
+  { group: "Fare rates",      key: "gst_pct",              label: "GST (%)",                             icon: Percent,      type: "number", placeholder: "5",                   help: "Applied on top of base fare after loyalty discount." },
+  { key: "loyalty_discount_pct",                           label: "Loyalty discount (%)",                icon: Percent,      type: "number", placeholder: "5",                   help: "Discount applied to every booking by default." },
+  { key: "convenience_fee_paise",                          label: "Convenience fee (paise)",             icon: IndianRupee,  type: "number", placeholder: "0",                   help: "Set to 0 to show the booking flow's 'FREE' label." },
+
+  // ─── Add-ons ───────────────────────────────────
+  { group: "Add-on prices",   key: "insurance_per_seat_paise", label: "Trip insurance (paise / seat)",   icon: ShieldCheck,  type: "number", placeholder: "4900",                help: "Defaults to ₹49 per seat. e.g. 4900 = ₹49." },
+  { key: "meal_veg_paise",                                 label: "Veg meal (paise / seat)",             icon: IndianRupee,  type: "number", placeholder: "9900",                help: "9900 = ₹99 per seat." },
+  { key: "meal_nonveg_paise",                              label: "Non-veg meal (paise / seat)",         icon: IndianRupee,  type: "number", placeholder: "12900",               help: "12900 = ₹129 per seat." },
+  { key: "seat_upgrade_paise",                             label: "Lower-berth upgrade (paise)",         icon: IndianRupee,  type: "number", placeholder: "5000",                help: "5000 = ₹50 nudge price shown when user picks an upper berth." },
+  { key: "insurance_coverage_label",                       label: "Insurance coverage copy",             icon: ShieldCheck,  type: "text",   placeholder: "₹2 lakh",             help: "Free-text copy shown next to the insurance checkbox." },
+  { key: "insurance_partner_label",                        label: "Insurance partner",                   icon: ShieldCheck,  type: "text",   placeholder: "ICICI Lombard",       help: "Provider name shown to the user." },
+
+  // ─── Refund tiers ─────────────────────────────
+  { group: "Refund tiers (% of total)", key: "refund_12h_pct", label: "Cancel 12+ hrs before",          icon: Percent,      type: "number", placeholder: "100",                 help: "Refund % when cancelled at least 12 hours ahead." },
+  { key: "refund_6h_pct",                                  label: "Cancel 6–12 hrs before",              icon: Percent,      type: "number", placeholder: "75",                  help: "Refund % when cancelled 6–12 hours ahead." },
+  { key: "refund_2h_pct",                                  label: "Cancel 2–6 hrs before",               icon: Percent,      type: "number", placeholder: "50",                  help: "Refund % when cancelled 2–6 hours ahead. Under 2 hours always = 0%." },
+];
 
 export default function AdminSettingsPage() {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -131,32 +124,43 @@ export default function AdminSettingsPage() {
           )}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
-            {FIELDS.map((f) => {
+            {FIELDS.map((f, idx) => {
               const Icon = f.icon;
               return (
-                <div key={f.key}>
-                  <label
-                    htmlFor={f.key}
-                    className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5"
-                  >
-                    {f.label}
-                  </label>
-                  <div className="relative">
-                    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <input
-                      id={f.key}
-                      type={f.type}
-                      value={values[f.key] ?? ""}
-                      onChange={(e) =>
-                        setValues((v) => ({ ...v, [f.key]: e.target.value }))
-                      }
-                      placeholder={f.placeholder}
-                      disabled={loading}
-                      className="w-full rounded-xl border border-gray-200 pl-10 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400"
-                    />
+                <Fragment key={f.key}>
+                  {f.group && (
+                    <h3
+                      className={`sm:col-span-2 text-xs font-bold text-[#1a3a8f] uppercase tracking-wider ${
+                        idx > 0 ? "mt-3" : ""
+                      } pb-1.5 border-b border-gray-100`}
+                    >
+                      {f.group}
+                    </h3>
+                  )}
+                  <div>
+                    <label
+                      htmlFor={f.key}
+                      className="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-1.5"
+                    >
+                      {f.label}
+                    </label>
+                    <div className="relative">
+                      <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <input
+                        id={f.key}
+                        type={f.type}
+                        value={values[f.key] ?? ""}
+                        onChange={(e) =>
+                          setValues((v) => ({ ...v, [f.key]: e.target.value }))
+                        }
+                        placeholder={f.placeholder}
+                        disabled={loading}
+                        className="w-full rounded-xl border border-gray-200 pl-10 pr-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-[#1a3a8f] focus:ring-2 focus:ring-[#1a3a8f]/20 outline-none transition-all disabled:bg-gray-50 disabled:text-gray-400"
+                      />
+                    </div>
+                    <p className="text-[11px] text-gray-500 mt-1">{f.help}</p>
                   </div>
-                  <p className="text-[11px] text-gray-500 mt-1">{f.help}</p>
-                </div>
+                </Fragment>
               );
             })}
           </div>

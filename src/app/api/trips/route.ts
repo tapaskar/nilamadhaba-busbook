@@ -37,8 +37,9 @@ export async function GET(req: Request) {
     );
   }
 
-  const dayOfWeek = new Date(date + "T00:00:00").getDay();
-  const schedules = await getSchedulesForRoute(from, to, dayOfWeek);
+  // Compute IST day-of-week from the requested travel date string
+  const dayOfWeek = new Date(date + "T00:00:00+05:30").getDay();
+  const schedules = await getSchedulesForRoute(from, to, dayOfWeek, date);
 
   const enriched = await Promise.all(
     schedules.map(async (sch: ScheduleWithDetails) => {

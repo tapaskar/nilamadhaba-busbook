@@ -143,12 +143,34 @@ function hydrateSchedule(r: ScheduleJoinRow): ScheduleWithDetails {
   };
 }
 
+/**
+ * Returns the IST date and "HH:MM:SS" time for the given moment.
+ * Used to filter out schedules whose departure has already passed
+ * when the user is searching for *today* in India.
+ */
+function nowInIST(): { date: string; time: string } {
+  // Asia/Kolkata is UTC+5:30, no DST.
+  const d = new Date();
+  const ist = new Date(d.getTime() + (5 * 60 + 30) * 60 * 1000);
+  const yyyy = ist.getUTCFullYear();
+  const mm = String(ist.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(ist.getUTCDate()).padStart(2, "0");
+  const hh = String(ist.getUTCHours()).padStart(2, "0");
+  const mi = String(ist.getUTCMinutes()).padStart(2, "0");
+  const ss = String(ist.getUTCSeconds()).padStart(2, "0");
+  return { date: `${yyyy}-${mm}-${dd}`, time: `${hh}:${mi}:${ss}` };
+}
+
 export async function getSchedulesForRoute(
   fromCityId: string,
   toCityId: string,
   dayOfWeek: number,
+  /** YYYY-MM-DD travel date — used to skip already-departed buses on today */
+  travelDate?: string,
 ): Promise<ScheduleWithDetails[]> {
   const db = sql();
+  const ist = nowInIST();
+  const isToday = travelDate === ist.date;
 
   if (!db) {
     const routes = mock.routes.filter(
@@ -165,7 +187,8 @@ export async function getSchedulesForRoute(
         (s) =>
           s.route_id === route.id &&
           s.is_active &&
-          s.days_of_week.includes(dayOfWeek),
+          s.days_of_week.includes(dayOfWeek) &&
+          (!isToday || s.departure_time > ist.time),
       );
       for (const sch of scheds) {
         const bus = mock.getBusById(sch.bus_id);
@@ -209,6 +232,10 @@ export async function getSchedulesForRoute(
         AND r.origin_city_id = ${fromCityId}
         AND r.destination_city_id = ${toCityId}
         AND ${dayOfWeek} = ANY(s.days_of_week)
+        -- When searching for today's date, skip buses that have already
+        -- departed in IST. ${isToday}::boolean OR ${ist.time}::time guard
+        -- avoids the comparison entirely on future dates.
+        AND (NOT ${isToday}::boolean OR s.departure_time > ${ist.time}::time)
       ORDER BY s.departure_time
     `) as unknown as ScheduleJoinRow[];
 
@@ -469,13 +496,40 @@ export async function getBookingsForUser(userId: string): Promise<Booking[]> {
 
 // ─── Cancel a booking + compute refund ─────────────────────────────────────
 
-function computeRefundPct(departureIso: string): number {
+/**
+ * Read refund-tier policy from app_settings (with sane fallbacks).
+ * Returns the % of total to refund based on hours-to-departure.
+ */
+async function computeRefundPct(
+  departureIso: string,
+  db: ReturnType<typeof sql>,
+): Promise<number> {
   const dep = new Date(departureIso).getTime();
   const now = Date.now();
   const hrs = (dep - now) / (1000 * 60 * 60);
-  if (hrs >= 12) return 100;
-  if (hrs >= 6) return 75;
-  if (hrs >= 2) return 50;
+
+  let p12 = 100, p6 = 75, p2 = 50;
+  if (db) {
+    try {
+      const rows = (await db`
+        SELECT key, value FROM app_settings
+        WHERE key IN ('refund_12h_pct', 'refund_6h_pct', 'refund_2h_pct')
+      `) as unknown as { key: string; value: string }[];
+      for (const r of rows) {
+        const n = Number(r.value);
+        if (!Number.isFinite(n)) continue;
+        if (r.key === "refund_12h_pct") p12 = n;
+        else if (r.key === "refund_6h_pct") p6 = n;
+        else if (r.key === "refund_2h_pct") p2 = n;
+      }
+    } catch {
+      /* fall back to defaults */
+    }
+  }
+
+  if (hrs >= 12) return p12;
+  if (hrs >= 6)  return p6;
+  if (hrs >= 2)  return p2;
   return 0;
 }
 
@@ -511,7 +565,7 @@ export async function cancelBooking(
     const b = rows[0];
 
     const departureIso = `${b.travel_date}T${b.departure_time}+05:30`;
-    const pct = computeRefundPct(departureIso);
+    const pct = await computeRefundPct(departureIso, db);
     const refund = Math.round((b.total_amount * pct) / 100);
     const newPaymentStatus =
       refund === 0

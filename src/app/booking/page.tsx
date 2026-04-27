@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { useBooking, type PassengerDetail } from "@/lib/store";
 import { formatPrice, formatTime, formatDuration } from "@/lib/constants";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 
 type PaymentMethod = "upi" | "card" | "netbanking" | "wallet";
 
@@ -47,6 +48,10 @@ export default function BookingPage() {
   // Add-ons (monetisation): defaulting insurance ON drives 30%+ attachment
   const [tripInsurance, setTripInsurance] = useState(true);
   const [mealAddon, setMealAddon] = useState<"none" | "veg" | "nonveg">("none");
+
+  // Fare policy + add-on prices live in app_settings (DB) — fetched
+  // once and shared across all consumers via useSiteSettings.
+  const rates = useSiteSettings();
 
   // Redirect if no trip/seats selected
   useEffect(() => {
@@ -112,16 +117,22 @@ export default function BookingPage() {
     }
     return false;
   });
-  const loyaltyDiscount = Math.round(baseFare * 0.05);
-  const afterDiscount = baseFare - loyaltyDiscount;
-  const gst = Math.round(afterDiscount * 0.05);
+  // All rates flow from /api/settings — admins can tune without redeploy
+  const loyaltyDiscount = Math.round(baseFare * (rates.loyalty_discount_pct / 100));
+  const afterDiscount   = baseFare - loyaltyDiscount;
+  const gst             = Math.round(afterDiscount * (rates.gst_pct / 100));
 
-  // Add-on prices (in paise)
-  const insuranceAmount = tripInsurance ? 4900 * selectedSeats.length : 0; // ₹49 per seat
+  const insuranceAmount = tripInsurance
+    ? rates.insurance_per_seat_paise * selectedSeats.length
+    : 0;
   const mealAmount =
-    mealAddon === "none" ? 0 : (mealAddon === "veg" ? 9900 : 12900) * selectedSeats.length; // ₹99 veg, ₹129 non-veg
+    mealAddon === "none"
+      ? 0
+      : (mealAddon === "veg" ? rates.meal_veg_paise : rates.meal_nonveg_paise) *
+        selectedSeats.length;
 
-  const grandTotal = afterDiscount + gst + insuranceAmount + mealAmount;
+  const grandTotal =
+    afterDiscount + gst + insuranceAmount + mealAmount + rates.convenience_fee_paise;
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
@@ -302,7 +313,7 @@ export default function BookingPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-gray-900">
-                    Upgrade to lower berth for just ₹50 more
+                    Upgrade to lower berth for just {formatPrice(rates.seat_upgrade_paise)} more
                   </p>
                   <p className="text-xs text-gray-600 mt-0.5">
                     Easier boarding, steadier ride — lower berths are
@@ -479,12 +490,12 @@ export default function BookingPage() {
                   </span>
                 </div>
                 <p className="text-xs text-gray-600 mt-1 leading-relaxed">
-                  Cover up to <strong>₹2 lakh</strong> for missed connections, medical emergencies,
-                  baggage loss, and trip cancellations. Partnered with ICICI Lombard.
+                  Cover up to <strong>{rates.insurance_coverage_label}</strong> for missed connections, medical emergencies,
+                  baggage loss, and trip cancellations. Partnered with {rates.insurance_partner_label}.
                 </p>
               </div>
               <div className="text-right shrink-0">
-                <p className="text-sm font-extrabold text-[#1a3a8f]">₹49</p>
+                <p className="text-sm font-extrabold text-[#1a3a8f]">{formatPrice(rates.insurance_per_seat_paise)}</p>
                 <p className="text-[10px] text-gray-400">per seat</p>
               </div>
             </label>
@@ -522,7 +533,7 @@ export default function BookingPage() {
                   }`}
                 >
                   <span className="block">🥗 Veg thali</span>
-                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">₹99 / seat</span>
+                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">{formatPrice(rates.meal_veg_paise)} / seat</span>
                 </button>
                 <button
                   type="button"
@@ -534,7 +545,7 @@ export default function BookingPage() {
                   }`}
                 >
                   <span className="block">🍗 Non-veg</span>
-                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">₹129 / seat</span>
+                  <span className="block text-[10px] text-gray-400 font-normal mt-0.5">{formatPrice(rates.meal_nonveg_paise)} / seat</span>
                 </button>
               </div>
             </div>
@@ -565,13 +576,13 @@ export default function BookingPage() {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-emerald-600 flex items-center gap-1">
                   <Tag className="h-3.5 w-3.5" />
-                  Loyalty Discount (5%)
+                  Loyalty Discount ({rates.loyalty_discount_pct}%)
                 </span>
                 <span className="text-emerald-600 font-medium">-{formatPrice(loyaltyDiscount)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600" title="Goods & Services Tax, collected by the government">
-                  GST (5%)
+                  GST ({rates.gst_pct}%)
                 </span>
                 <span className="text-gray-900 font-medium">{formatPrice(gst)}</span>
               </div>
@@ -596,8 +607,19 @@ export default function BookingPage() {
               )}
 
               <div className="flex items-center justify-between text-sm">
-                <span className="text-emerald-600 font-semibold">Convenience fee</span>
-                <span className="text-emerald-600 font-bold">FREE</span>
+                {rates.convenience_fee_paise > 0 ? (
+                  <>
+                    <span className="text-gray-600">Convenience fee</span>
+                    <span className="text-gray-900 font-medium">
+                      {formatPrice(rates.convenience_fee_paise)}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-emerald-600 font-semibold">Convenience fee</span>
+                    <span className="text-emerald-600 font-bold">FREE</span>
+                  </>
+                )}
               </div>
 
               <div className="border-t-2 border-gray-200 pt-3 flex items-center justify-between">
@@ -609,7 +631,7 @@ export default function BookingPage() {
               <div className="mt-4 flex items-start gap-2 bg-emerald-50 rounded-xl px-4 py-3 border border-emerald-100">
                 <ShieldCheck className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" />
                 <p className="text-xs text-emerald-700">
-                  Free cancellation until 12 hours before departure. Full refund to original payment method.
+                  Free cancellation until {rates.cancel_free_hours} hours before departure. Full refund to original payment method.
                 </p>
               </div>
             </div>
