@@ -26,8 +26,23 @@ type View = "closed" | "menu" | "ai" | "whatsapp";
 export default function SupportHub() {
   const t = useT();
   const [view, setView] = useState<View>("closed");
+  // Two-stage attention: badge + pulse for the first ~5s, then quiet
+  // (until the user opens it, which removes them entirely).
   const [hasBeenOpened, setHasBeenOpened] = useState(false);
+  const [showAttention, setShowAttention] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+
+  // Show the unread badge briefly after mount, then auto-hide.
+  // This is the "we're here if you need us" wave — not a fake "1 unread"
+  // notification that lingers forever.
+  useEffect(() => {
+    const showAt = setTimeout(() => setShowAttention(true), 1500);
+    const hideAt = setTimeout(() => setShowAttention(false), 6500);
+    return () => {
+      clearTimeout(showAt);
+      clearTimeout(hideAt);
+    };
+  }, []);
 
   // Close on Escape
   useEffect(() => {
@@ -192,16 +207,17 @@ export default function SupportHub() {
             <>
               <MessageSquareText className="h-6 w-6" />
 
-              {/* Gold pulse ring — only until first open */}
-              {!hasBeenOpened && (
-                <span className="absolute inset-0 rounded-full bg-[#f5c842]/30 animate-ping" />
+              {/* Gentle gold pulse — only during the attention window
+                  (first ~5 seconds after page load), and never after the
+                  user has opened the menu once. No fake "1 unread" badge. */}
+              {!hasBeenOpened && showAttention && (
+                <span className="absolute inset-0 rounded-full bg-[#f5c842]/25 animate-ping" />
               )}
 
-              {/* Unread badge — small, elegant */}
-              {!hasBeenOpened && (
-                <span className="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 rounded-full bg-[#f5c842] text-[#1a1a2e] text-[10px] font-black border-2 border-white shadow-md">
-                  1
-                </span>
+              {/* Subtle gold dot — same lifecycle as the pulse, but
+                  smaller and never with a number on it. */}
+              {!hasBeenOpened && showAttention && (
+                <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-[#f5c842] border border-white shadow-sm" />
               )}
             </>
           )}

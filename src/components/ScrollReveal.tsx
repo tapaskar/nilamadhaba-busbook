@@ -28,6 +28,18 @@ export default function ScrollReveal({
       el.classList.add("is-visible");
       return;
     }
+
+    // Mount-time: if the element is already in or above the current
+    // viewport, reveal it immediately. Fixes the bug where elements
+    // that scrolled past quickly (anchor link, fast wheel, refresh on
+    // a deep-scrolled page) never get observed and stay at opacity 0.
+    const rect = el.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    if (rect.top < vh) {
+      el.classList.add("is-visible");
+      return;
+    }
+
     const io = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -41,7 +53,25 @@ export default function ScrollReveal({
       { rootMargin: "0px 0px -10% 0px", threshold: 0.1 },
     );
     io.observe(el);
-    return () => io.disconnect();
+
+    // Belt-and-braces: if the element comes into view via a fast scroll
+    // before the IntersectionObserver fires, a scroll listener catches
+    // the bottom-of-viewport crossing.
+    const onScroll = () => {
+      const r = el.getBoundingClientRect();
+      const vp = window.innerHeight || document.documentElement.clientHeight;
+      if (r.top < vp * 0.95) {
+        el.classList.add("is-visible");
+        window.removeEventListener("scroll", onScroll);
+        io.disconnect();
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   const delayCls = delay ? ` delay-${delay}` : "";

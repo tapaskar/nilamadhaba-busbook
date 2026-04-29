@@ -53,12 +53,18 @@ export default function Header() {
             scrolled ? "h-14" : "h-16"
           }`}
         >
-          {/* Logo */}
+          {/* Logo — gradient tile shrinks below 380px so the wordmark
+              has room to breathe. Above that it shows at full size. */}
           <Link href="/" className="flex items-center gap-2 shrink-0 group">
-            <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-[#1a3a8f] to-[#1a1a2e] shadow-sm group-hover:shadow-md group-hover:shadow-[#1a3a8f]/30 transition-all">
+            <div className="hidden min-[380px]:flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-[#1a3a8f] to-[#1a1a2e] shadow-sm group-hover:shadow-md group-hover:shadow-[#1a3a8f]/30 transition-all">
               <Bus className="h-5 w-5 text-[#f5c842] group-hover:scale-110 transition-transform" />
             </div>
-            <span className="text-xl font-extrabold tracking-tight text-[#1a3a8f]">
+            <Bus
+              className="min-[380px]:hidden h-6 w-6 text-[#f5c842]"
+              style={{ filter: "drop-shadow(0 1px 2px rgb(26 58 143 / 0.3))" }}
+              aria-hidden="true"
+            />
+            <span className="text-lg sm:text-xl font-extrabold tracking-tight text-[#1a3a8f]">
               NilaMadhaba
             </span>
           </Link>
@@ -82,7 +88,7 @@ export default function Header() {
             <LanguageSwitcher />
             <Link
               href="/login"
-              className="flex items-center gap-1.5 rounded-full border-2 border-[#1a3a8f] px-5 py-1.5 text-sm font-semibold text-[#1a3a8f] hover:bg-[#1a3a8f] hover:text-white hover:shadow-lg hover:shadow-[#1a3a8f]/30 transition-all"
+              className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-[#1a3a8f] hover:bg-[#e8edf8] transition-colors"
             >
               <User className="h-4 w-4" />
               {t("nav.login")}
@@ -123,10 +129,10 @@ export default function Header() {
             <Link
               href="/login"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center justify-center gap-1.5 rounded-full border-2 border-[#1a3a8f] px-5 py-2 text-sm font-semibold text-[#1a3a8f] hover:bg-[#1a3a8f] hover:text-white transition-colors"
+              className="flex items-center justify-center gap-1.5 rounded-full border border-[#1a3a8f]/40 px-5 py-2 text-sm font-semibold text-[#1a3a8f] hover:bg-[#e8edf8] transition-colors"
             >
               <User className="h-4 w-4" />
-              Login
+              {t("nav.login")}
             </Link>
           </div>
         </div>

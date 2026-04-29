@@ -33,7 +33,9 @@ export interface PassengerDetail {
   seatNumber: string;
   name: string;
   age: number;
-  gender: "male" | "female" | "other";
+  /** Empty string = user hasn't picked yet. Validated to one of the
+   *  three values before submit. */
+  gender: "male" | "female" | "other" | "";
   isPrimary: boolean;
 }
 
@@ -205,7 +207,10 @@ function bookingReducer(
           seatNumber: p.seatNumber,
           name: p.name,
           age: p.age,
-          gender: p.gender,
+          // The booking page validates that gender !== "" before
+          // dispatching CONFIRM_BOOKING; coerce the unselected sentinel
+          // to "other" defensively in case it ever slips through.
+          gender: (p.gender || "other") as "male" | "female" | "other",
           isPrimary: p.isPrimary,
         })),
       });

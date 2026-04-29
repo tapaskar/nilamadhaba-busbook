@@ -11,6 +11,7 @@ import {
   Sparkles,
   CheckCircle2,
   Lock,
+  AlertCircle,
 } from "lucide-react";
 
 /**
@@ -46,6 +47,7 @@ function LoginInner() {
 
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [pendingNotice, setPendingNotice] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -55,14 +57,16 @@ function LoginInner() {
   function handlePhoneSubmit(e: React.FormEvent) {
     e.preventDefault();
     setPhoneError(null);
+    setPendingNotice(null);
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 10) {
       setPhoneError("Enter a 10-digit mobile number");
       return;
     }
-    // OTP flow isn't wired yet — surface a friendly placeholder
-    alert(
-      `📱 OTP login is launching soon.\n\nFor now, you can book as a guest — your booking still works exactly the same.`,
+    // OTP flow isn't wired yet — surface an inline notice instead of an
+    // alert(), which would block the renderer.
+    setPendingNotice(
+      "OTP login launches with our next release. Use Continue as Guest below to keep booking — your ticket and refund policy are identical.",
     );
   }
 
@@ -91,6 +95,24 @@ function LoginInner() {
           </div>
 
           <div className="px-7 pb-7 space-y-4">
+            {/* Inline notice — replaces the old alert() popup */}
+            {pendingNotice && (
+              <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-2.5">
+                <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm text-amber-800">{pendingNotice}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPendingNotice(null)}
+                  className="text-amber-600 hover:text-amber-800 text-xs font-bold shrink-0"
+                  aria-label="Dismiss"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
             {/* Phone — primary */}
             <form onSubmit={handlePhoneSubmit}>
               <label
@@ -144,7 +166,11 @@ function LoginInner() {
             {/* Google — placeholder */}
             <button
               type="button"
-              onClick={() => alert("🔒 Google Sign-in launches with our next release. Use phone OTP or continue as guest for now.")}
+              onClick={() =>
+                setPendingNotice(
+                  "Google Sign-in launches with our next release. Use phone OTP or Continue as Guest for now.",
+                )
+              }
               className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors"
             >
               <GoogleIcon className="h-4 w-4" />
@@ -157,7 +183,11 @@ function LoginInner() {
             {/* Email — placeholder */}
             <button
               type="button"
-              onClick={() => alert("✉️ Email sign-in launches with our next release. Use phone OTP or continue as guest for now.")}
+              onClick={() =>
+                setPendingNotice(
+                  "Email sign-in launches with our next release. Use phone OTP or Continue as Guest for now.",
+                )
+              }
               className="w-full flex items-center justify-center gap-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors"
             >
               <Mail className="h-4 w-4 text-gray-500" />

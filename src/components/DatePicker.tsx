@@ -185,7 +185,7 @@ export default function DatePicker({
           className="inline-flex items-center gap-1.5 rounded-lg bg-[#e8edf8]/60 hover:bg-[#1a3a8f] hover:text-white text-[#1a3a8f] px-2.5 py-1 text-[11px] font-bold transition-colors"
         >
           <CalendarRange className="h-3 w-3" />
-          Pick from calendar
+          {t("date.pickFromCalendar")}
         </button>
       </div>
 

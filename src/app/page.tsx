@@ -27,7 +27,7 @@ import {
 import CityPicker from "@/components/CityPicker";
 import DatePicker from "@/components/DatePicker";
 import ScrollReveal from "@/components/ScrollReveal";
-import { useT } from "@/lib/i18n";
+import { useI18n } from "@/lib/i18n";
 import AnimatedCounter from "@/components/AnimatedCounter";
 import LiveBookingTicker from "@/components/LiveBookingTicker";
 import DestinationCard from "@/components/DestinationCard";
@@ -86,7 +86,11 @@ const DEFAULT_HERO_IMAGE =
 
 export default function HomePage() {
   const router = useRouter();
-  const t = useT();
+  const { t, locale } = useI18n();
+  // CMS overrides only apply on English. Other locales fall back to the
+  // translation dictionary so a user picking हिन्दी / বাংলা / etc. sees a
+  // fully translated hero, not the CMS-authored English copy.
+  const cmsActive = locale === "en";
   const [fromCity, setFromCity] = useState("");
   const [fromCityName, setFromCityName] = useState("");
   const [toCity, setToCity] = useState("");
@@ -204,7 +208,7 @@ export default function HomePage() {
               </div>
             )}
 
-            {cmsEyebrow && (
+            {cmsActive && cmsEyebrow && (
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm px-3.5 py-1.5 text-xs font-semibold text-white/90">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#f5c842] animate-pulse" />
                 {cmsEyebrow}
@@ -212,13 +216,15 @@ export default function HomePage() {
             )}
 
             <h1 className="text-[2.5rem] sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.02]">
-              {cmsTitle1 ?? t("hero.title1")}
+              {cmsActive && cmsTitle1 ? cmsTitle1 : t("hero.title1")}
               <br />
-              <span className="text-gold-gradient">{cmsTitle2 ?? t("hero.title2")}</span>
+              <span className="text-gold-gradient">
+                {cmsActive && cmsTitle2 ? cmsTitle2 : t("hero.title2")}
+              </span>
             </h1>
 
             <p className="mt-6 text-lg sm:text-xl text-white/75 max-w-2xl mx-auto leading-relaxed">
-              {cmsSubtitle ?? t("hero.subtitle")}
+              {cmsActive && cmsSubtitle ? cmsSubtitle : t("hero.subtitle")}
             </p>
 
             {/* Trust badges */}

@@ -126,59 +126,64 @@ export default function SeatMap({
               </div>
             </div>
 
-            {/* Seat grid */}
-            <div
-              className="grid gap-1.5 mx-auto w-fit"
-              style={{
-                gridTemplateColumns: `repeat(${deck.cols}, minmax(0, 1fr))`,
-              }}
-            >
-              {grid.map((row, rowIdx) =>
-                row.map((seat, colIdx) => {
-                  const key = `${rowIdx}-${colIdx}`;
+            {/* Seat grid — horizontally scrollable on narrow phones so the
+                layout never squeezes seats below their 44px touch-target
+                minimum. The wrapper centers when content fits, scrolls when
+                it doesn't. */}
+            <div className="overflow-x-auto -mx-4 px-4">
+              <div
+                className="grid gap-1.5 mx-auto w-fit"
+                style={{
+                  gridTemplateColumns: `repeat(${deck.cols}, minmax(0, 1fr))`,
+                }}
+              >
+                {grid.map((row, rowIdx) =>
+                  row.map((seat, colIdx) => {
+                    const key = `${rowIdx}-${colIdx}`;
 
-                  // Skip cells occupied by a multi-span seat (but not the origin cell)
-                  if (!seat && occupied.has(key)) {
-                    return null;
-                  }
+                    // Skip cells occupied by a multi-span seat (but not the origin cell)
+                    if (!seat && occupied.has(key)) {
+                      return null;
+                    }
 
-                  // Empty gap
-                  if (!seat) {
-                    return <div key={key} className="w-10 h-10 sm:w-12 sm:h-12" />;
-                  }
+                    // Empty gap
+                    if (!seat) {
+                      return <div key={key} className="w-11 h-11 sm:w-12 sm:h-12" />;
+                    }
 
-                  const status = getSeatStatus(seat, bookedSeats, selectedSeats);
+                    const status = getSeatStatus(seat, bookedSeats, selectedSeats);
 
-                  return (
-                    <button
-                      key={seat.id}
-                      type="button"
-                      onClick={() => handleClick(seat)}
-                      disabled={status === "booked"}
-                      title={`${seat.label} - ${seat.type}${seat.ladies_only ? " (Ladies)" : ""}`}
-                      className={`
-                        relative flex items-center justify-center rounded-lg border-2 text-xs font-bold
-                        transition-all duration-150
-                        ${statusStyles[status]}
-                        ${seat.colSpan > 1 ? "w-[calc(theme(spacing.10)*2+theme(spacing.1.5))] sm:w-[calc(theme(spacing.12)*2+theme(spacing.1.5))]" : "w-10 sm:w-12"}
-                        ${seat.rowSpan > 1 ? "h-[calc(theme(spacing.10)*2+theme(spacing.1.5))] sm:h-[calc(theme(spacing.12)*2+theme(spacing.1.5))]" : "h-10 sm:h-12"}
-                      `}
-                      style={{
-                        gridColumn:
-                          seat.colSpan > 1
-                            ? `${colIdx + 1} / span ${seat.colSpan}`
-                            : undefined,
-                        gridRow:
-                          seat.rowSpan > 1
-                            ? `${rowIdx + 1} / span ${seat.rowSpan}`
-                            : undefined,
-                      }}
-                    >
-                      {seat.label}
-                    </button>
-                  );
-                })
-              )}
+                    return (
+                      <button
+                        key={seat.id}
+                        type="button"
+                        onClick={() => handleClick(seat)}
+                        disabled={status === "booked"}
+                        title={`${seat.label} - ${seat.type}${seat.ladies_only ? " (Ladies)" : ""}`}
+                        className={`
+                          relative flex items-center justify-center rounded-lg border-2 text-[11px] sm:text-xs font-bold
+                          transition-all duration-150
+                          ${statusStyles[status]}
+                          ${seat.colSpan > 1 ? "w-[calc(theme(spacing.11)*2+theme(spacing.1.5))] sm:w-[calc(theme(spacing.12)*2+theme(spacing.1.5))]" : "w-11 sm:w-12"}
+                          ${seat.rowSpan > 1 ? "h-[calc(theme(spacing.11)*2+theme(spacing.1.5))] sm:h-[calc(theme(spacing.12)*2+theme(spacing.1.5))]" : "h-11 sm:h-12"}
+                        `}
+                        style={{
+                          gridColumn:
+                            seat.colSpan > 1
+                              ? `${colIdx + 1} / span ${seat.colSpan}`
+                              : undefined,
+                          gridRow:
+                            seat.rowSpan > 1
+                              ? `${rowIdx + 1} / span ${seat.rowSpan}`
+                              : undefined,
+                        }}
+                      >
+                        {seat.label}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         );

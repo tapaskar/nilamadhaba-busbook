@@ -74,6 +74,7 @@ const en: Dict = {
 
   // Date picker
   "date.title":                  "TRAVEL DATE",
+  "date.pickFromCalendar":       "Pick from calendar",
 
   // Stats bar
   "stats.travellers":            "Happy travellers",
@@ -155,6 +156,7 @@ const en: Dict = {
   "footer.newsletterSubtitle":   "Flash sales, new routes, and travel tips — no spam, unsubscribe anytime.",
   "footer.emailPlaceholder":     "your@email.com",
   "footer.subscribe":            "Subscribe",
+  "footer.subscribing":          "Subscribing…",
   "footer.subscribed":           "Subscribed!",
   "footer.tagline":              "India's most comfortable intercity bus service. Safe, reliable, and built for the modern traveller.",
   "footer.company":              "Company",
@@ -239,6 +241,7 @@ const hi: Dict = {
   "city.noCities":               "कोई शहर नहीं मिला",
 
   "date.title":                  "यात्रा की तारीख",
+  "date.pickFromCalendar":       "कैलेंडर से चुनें",
 
   "stats.travellers":            "खुश यात्री",
   "stats.dailyTrips":            "दैनिक यात्राएँ",
@@ -311,6 +314,7 @@ const hi: Dict = {
   "footer.newsletterSubtitle":   "फ्लैश सेल, नए रूट, और यात्रा सुझाव — कोई स्पैम नहीं, कभी भी अनसब्सक्राइब करें।",
   "footer.emailPlaceholder":     "your@email.com",
   "footer.subscribe":            "सब्सक्राइब",
+  "footer.subscribing":          "सब्सक्राइब हो रहा है…",
   "footer.subscribed":           "सब्सक्राइब्ड!",
   "footer.tagline":              "भारत की सबसे आरामदायक इंटरसिटी बस सेवा। सुरक्षित, विश्वसनीय, और आधुनिक यात्री के लिए बनाई गई।",
   "footer.company":              "कंपनी",
@@ -392,6 +396,7 @@ const bn: Dict = {
   "city.noCities":               "কোনো শহর পাওয়া যায়নি",
 
   "date.title":                  "ভ্রমণের তারিখ",
+  "date.pickFromCalendar":       "ক্যালেন্ডার থেকে বাছুন",
 
   "stats.travellers":            "সুখী যাত্রী",
   "stats.dailyTrips":            "দৈনিক যাত্রা",
@@ -464,6 +469,7 @@ const bn: Dict = {
   "footer.newsletterSubtitle":   "ফ্ল্যাশ সেল, নতুন রুট, ও ভ্রমণ টিপস — কোনো স্প্যাম নেই, যেকোনো সময় আনসাবস্ক্রাইব করুন।",
   "footer.emailPlaceholder":     "your@email.com",
   "footer.subscribe":            "সাবস্ক্রাইব",
+  "footer.subscribing":          "সাবস্ক্রাইব হচ্ছে…",
   "footer.subscribed":           "সাবস্ক্রাইব হয়েছে!",
   "footer.tagline":              "ভারতের সবচেয়ে আরামদায়ক আন্তঃনগর বাস পরিষেবা। নিরাপদ, নির্ভরযোগ্য, আধুনিক যাত্রীর জন্য তৈরি।",
   "footer.company":              "কোম্পানি",
@@ -545,6 +551,7 @@ const ta: Dict = {
   "city.noCities":               "எந்த நகரமும் கிடைக்கவில்லை",
 
   "date.title":                  "பயண தேதி",
+  "date.pickFromCalendar":       "நாட்காட்டியில் இருந்து தேர்வு",
 
   "stats.travellers":            "மகிழ்ச்சியான பயணிகள்",
   "stats.dailyTrips":            "தினசரி பயணங்கள்",
@@ -617,6 +624,7 @@ const ta: Dict = {
   "footer.newsletterSubtitle":   "ஃப்ளாஷ் விற்பனைகள், புதிய பாதைகள், பயண குறிப்புகள் — ஸ்பேம் இல்லை, எப்போது வேண்டுமானாலும் குழுவிலகலாம்.",
   "footer.emailPlaceholder":     "your@email.com",
   "footer.subscribe":            "சந்தா",
+  "footer.subscribing":          "சந்தா செய்கிறது…",
   "footer.subscribed":           "சந்தா செய்யப்பட்டது!",
   "footer.tagline":              "இந்தியாவின் மிகவும் வசதியான நகரங்களுக்கிடையேயான பேருந்து சேவை. பாதுகாப்பான, நம்பகமான, நவீன பயணிக்கு ஏற்ப உருவாக்கப்பட்டது.",
   "footer.company":              "நிறுவனம்",
@@ -698,6 +706,7 @@ const te: Dict = {
   "city.noCities":               "నగరాలు కనుగొనబడలేదు",
 
   "date.title":                  "ప్రయాణ తేదీ",
+  "date.pickFromCalendar":       "క్యాలెండర్ నుండి ఎంచుకోండి",
 
   "stats.travellers":            "సంతోషకరమైన ప్రయాణీకులు",
   "stats.dailyTrips":            "రోజువారీ ప్రయాణాలు",
@@ -770,6 +779,7 @@ const te: Dict = {
   "footer.newsletterSubtitle":   "ఫ్లాష్ సేల్స్, కొత్త మార్గాలు, మరియు ప్రయాణ సూచనలు — స్పామ్ లేదు, ఎప్పుడైనా అన్‌సబ్‌స్క్రైబ్ చేయండి.",
   "footer.emailPlaceholder":     "your@email.com",
   "footer.subscribe":            "సబ్‌స్క్రైబ్",
+  "footer.subscribing":          "సబ్‌స్క్రైబ్ అవుతోంది…",
   "footer.subscribed":           "సబ్‌స్క్రైబ్ అయింది!",
   "footer.tagline":              "భారతదేశంలో అత్యంత సౌకర్యవంతమైన ఇంటర్‌సిటీ బస్ సేవ. సురక్షితమైన, విశ్వసనీయమైన, ఆధునిక ప్రయాణీకుల కోసం నిర్మించబడింది.",
   "footer.company":              "కంపెనీ",
@@ -851,6 +861,7 @@ const or: Dict = {
   "city.noCities":               "କୌଣସି ସହର ମିଳିଲା ନାହିଁ",
 
   "date.title":                  "ଯାତ୍ରା ତାରିଖ",
+  "date.pickFromCalendar":       "କ୍ୟାଲେଣ୍ଡରରୁ ବାଛନ୍ତୁ",
 
   "stats.travellers":            "ଖୁସି ଯାତ୍ରୀ",
   "stats.dailyTrips":            "ଦୈନିକ ଯାତ୍ରା",
@@ -923,6 +934,7 @@ const or: Dict = {
   "footer.newsletterSubtitle":   "ଫ୍ଲାସ୍ ସେଲ୍, ନୂଆ ମାର୍ଗ, ଓ ଯାତ୍ରା ସୂଚନା — କୌଣସି ସ୍ପାମ ନାହିଁ, ଯେକୌଣସି ସମୟରେ ଅନସବ୍‌ସ୍କ୍ରାଇବ୍ କରନ୍ତୁ।",
   "footer.emailPlaceholder":     "your@email.com",
   "footer.subscribe":            "ସବ୍‌ସ୍କ୍ରାଇବ୍",
+  "footer.subscribing":          "ସବ୍‌ସ୍କ୍ରାଇବ୍ ହେଉଛି…",
   "footer.subscribed":           "ସବ୍‌ସ୍କ୍ରାଇବ୍ ହୋଇଛି!",
   "footer.tagline":              "ଭାରତର ସବୁଠାରୁ ଆରାମଦାୟକ ଆନ୍ତଃନଗରୀ ବସ୍ ସେବା। ସୁରକ୍ଷିତ, ବିଶ୍ୱସନୀୟ, ଆଧୁନିକ ଯାତ୍ରୀଙ୍କ ପାଇଁ ନିର୍ମିତ।",
   "footer.company":              "କମ୍ପାନୀ",

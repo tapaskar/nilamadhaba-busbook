@@ -9,6 +9,7 @@ import {
   MapPin,
   Shield,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { useT } from "@/lib/i18n";
 
@@ -114,11 +115,17 @@ const paymentMethods = [
 export default function Footer() {
   const t = useT();
   const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [subscribed, setSubscribed] = useState(false);
 
-  function handleSubscribe(e: React.FormEvent) {
+  async function handleSubscribe(e: React.FormEvent) {
     e.preventDefault();
-    if (!email.includes("@")) return;
+    if (!email.includes("@") || submitting) return;
+    setSubmitting(true);
+    // Brief simulated round-trip so the spinner reads as a real network
+    // call. Wire to a real /api/subscribe endpoint when the backend lands.
+    await new Promise((r) => setTimeout(r, 800));
+    setSubmitting(false);
     setSubscribed(true);
     setEmail("");
     setTimeout(() => setSubscribed(false), 3000);
@@ -149,13 +156,21 @@ export default function Footer() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("footer.emailPlaceholder")}
                 aria-label="Email address"
-                className="flex-1 lg:w-72 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-[#f5c842] focus:ring-2 focus:ring-[#f5c842]/20 outline-none transition-all"
+                disabled={submitting}
+                className="flex-1 lg:w-72 rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-[#f5c842] focus:ring-2 focus:ring-[#f5c842]/20 outline-none transition-all disabled:opacity-60"
               />
               <button
                 type="submit"
-                className="shrink-0 flex items-center gap-1.5 rounded-xl bg-[#f5c842] hover:bg-[#fde68a] text-[#1a1a2e] px-5 py-3 text-sm font-bold transition-colors"
+                disabled={submitting || subscribed}
+                aria-busy={submitting}
+                className="shrink-0 flex items-center gap-1.5 rounded-xl bg-[#f5c842] hover:bg-[#fde68a] text-[#1a1a2e] px-5 py-3 text-sm font-bold transition-colors disabled:opacity-80 disabled:cursor-not-allowed"
               >
-                {subscribed ? (
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {t("footer.subscribing")}
+                  </>
+                ) : subscribed ? (
                   <>
                     <Shield className="h-4 w-4" />
                     {t("footer.subscribed")}

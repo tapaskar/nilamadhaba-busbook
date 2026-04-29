@@ -67,8 +67,8 @@ export default function BookingPage() {
         selectedSeats.map((seatId, i) => ({
           seatNumber: seatId,
           name: "",
-          age: 0,
-          gender: "male" as const,
+          age: 0,           // shown as empty input via `value || ""`
+          gender: "",       // unselected — user must pick
           isPrimary: i === 0,
         }))
       );
@@ -139,6 +139,7 @@ export default function BookingPage() {
     passengers.forEach((p, i) => {
       if (!p.name.trim()) newErrors[`name-${i}`] = "Name is required";
       if (!p.age || p.age < 1 || p.age > 120) newErrors[`age-${i}`] = "Valid age required";
+      if (!p.gender) newErrors[`gender-${i}`] = "Please select gender";
     });
     if (!contactEmail.trim() || !/\S+@\S+\.\S+/.test(contactEmail))
       newErrors.email = "Valid email required";
@@ -253,9 +254,16 @@ export default function BookingPage() {
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">From</p>
                 <p className="text-lg font-bold text-gray-900">{route.origin_city.name}</p>
                 <p className="text-sm font-semibold text-primary">{formatTime(schedule.departure_time)}</p>
-                {boardingStop && (
-                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1">
-                    <MapPin className="h-3 w-3" /> {boardingStop.name}
+                <p className="text-xs text-gray-700 font-semibold mt-0.5 flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-emerald-600" />
+                  {route.origin_city.name} Bus Stand · Platform 4
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  Near Anand Rao Circle, Gate 2
+                </p>
+                {boardingStop && boardingStop.name !== "Bus Stand" && (
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {boardingStop.name}
                   </p>
                 )}
               </div>
@@ -272,9 +280,16 @@ export default function BookingPage() {
                 <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">To</p>
                 <p className="text-lg font-bold text-gray-900">{route.destination_city.name}</p>
                 <p className="text-sm font-semibold text-primary">{formatTime(schedule.arrival_time)}</p>
-                {droppingStop && (
-                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-1 justify-end">
-                    <MapPin className="h-3 w-3" /> {droppingStop.name}
+                <p className="text-xs text-gray-700 font-semibold mt-0.5 flex items-center gap-1 justify-end">
+                  <MapPin className="h-3 w-3 text-[#1a3a8f]" />
+                  {route.destination_city.name} Bus Stand · CMBT Gate 3
+                </p>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  Koyambedu metro 200 m, auto-stand at exit
+                </p>
+                {droppingStop && droppingStop.name !== "Bus Stand" && (
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {droppingStop.name}
                   </p>
                 )}
               </div>
@@ -408,6 +423,9 @@ export default function BookingPage() {
                         </label>
                       ))}
                     </div>
+                    {errors[`gender-${idx}`] && (
+                      <p className="text-xs text-red-500 mt-1">{errors[`gender-${idx}`]}</p>
+                    )}
                   </div>
                 </div>
               </div>
